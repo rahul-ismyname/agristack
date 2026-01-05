@@ -44,7 +44,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, title = "Dashboard" })
     const location = useLocation();
     const isActive = (path: string) => location.pathname === path;
     const [isHelpOpen, setIsHelpOpen] = React.useState(false);
-    const { signOut, user } = useAuth();
+    const { signOut, profile } = useAuth();
 
     return (
         <div className="flex h-screen bg-[#FAFAFA] font-outfit">
@@ -136,11 +136,15 @@ export const Layout: React.FC<LayoutProps> = ({ children, title = "Dashboard" })
 
                 <div className="p-4 border-t border-gray-100">
                     <Link to="/profile" className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors group">
-                        <div className="w-9 h-9 rounded-full bg-orange-100 flex items-center justify-center text-orange-700 font-bold text-sm group-hover:bg-orange-200 transition-colors">
-                            {user?.email?.[0].toUpperCase() || 'U'}
+                        <div className="w-9 h-9 rounded-full bg-orange-100 flex items-center justify-center text-orange-700 font-bold text-sm group-hover:bg-orange-200 transition-colors overflow-hidden">
+                            {profile?.avatar_url ? (
+                                <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                            ) : (
+                                profile?.name ? profile.name.split(' ').map((n: any) => n[0]).join('').slice(0, 2) : 'U'
+                            )}
                         </div>
                         <div className="flex-1 overflow-hidden">
-                            <div className="text-sm font-semibold text-gray-900 truncate">{user?.email?.split('@')[0]}</div>
+                            <div className="text-sm font-semibold text-gray-900 truncate">{profile?.name || 'User'}</div>
                             <div className="text-xs text-gray-500">View Profile</div>
                         </div>
                     </Link>
