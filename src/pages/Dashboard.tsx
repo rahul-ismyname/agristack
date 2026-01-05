@@ -1,0 +1,172 @@
+import React, { useEffect, useState } from 'react';
+import {
+    FileText,
+    TrendingUp,
+    Users,
+    Truck,
+    Loader2,
+    CheckCircle2,
+} from 'lucide-react';
+import { Layout } from '../components/Layout';
+import { getDashboardStats, getRecentActivity } from '../lib/api';
+
+const StatCard = ({ icon: Icon, color, label, value, trend, trendUp }: any) => (
+    <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
+        <div className="flex justify-between items-start mb-4">
+            <div className={`p-2 rounded-lg ${color}`}>
+                <Icon className="w-5 h-5 text-gray-700" />
+            </div>
+            {trend && (
+                <div className={`flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full ${trendUp ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                    <TrendingUp className="w-3 h-3" />
+                    {trend}
+                </div>
+            )}
+        </div>
+        <div className="text-gray-500 text-sm font-medium mb-1">{label}</div>
+        <div className="text-3xl font-bold text-gray-900">{value}</div>
+    </div>
+);
+
+const StatusBadge = ({ status }: { status: string }) => {
+    const styles: Record<string, string> = {
+        'Completed': 'bg-blue-50 text-blue-700 border-blue-100',
+        'Passed': 'bg-green-50 text-green-700 border-green-100',
+        'Failed': 'bg-red-50 text-red-700 border-red-100',
+        'Pending': 'bg-amber-50 text-amber-700 border-amber-100',
+    };
+
+    return (
+        <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${styles[status] || 'bg-gray-50 text-gray-600'}`}>
+            <span className="w-1.5 h-1.5 rounded-full inline-block mr-2 bg-current opacity-60" />
+            {status}
+        </span>
+    );
+};
+
+export const Dashboard: React.FC = () => {
+    const [stats, setStats] = useState<any>({
+        farmerCount: 0,
+        inspectionCount: 0,
+        passedCount: 0,
+        failedCount: 0,
+        vehicleCount: 0
+    });
+    const [recentActivity, setRecentActivity] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const loadDashboardData = async () => {
+            try {
+                const [statsData, activityData] = await Promise.all([
+                    getDashboardStats(),
+                    getRecentActivity()
+                ]);
+                setStats(statsData);
+                setRecentActivity(activityData);
+            } catch (error) {
+                console.error("Failed to load dashboard data:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        loadDashboardData();
+    }, []);
+
+    if (isLoading) {
+        return (
+            <Layout title="Dashboard">
+                <div className="flex items-center justify-center h-full">
+                    <Loader2 className="w-8 h-8 text-primary-vivid animate-spin" />
+                </div>
+            </Layout>
+        );
+    }
+
+    return (
+        <Layout title="Dashboard Overview">
+            <div className="mb-8">
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome back, Officer</h2>
+                <p className="text-gray-500">Here's what's happening in your district today.</p>
+            </div>
+
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <StatCard
+                    icon={Users}
+                    color="bg-blue-100"
+                    label="Total Farmers"
+                    value={stats.farmerCount}
+                    trend="+12%"
+                    trendUp={true}
+                />
+                <StatCard
+                    icon={FileText}
+                    color="bg-orange-100"
+                    label="Total Inspections"
+                    value={stats.inspectionCount}
+                    trend="Active"
+                    trendUp={true}
+                />
+                <StatCard
+                    icon={CheckCircle2}
+                    color="bg-green-100"
+                    label="Inspections Passed"
+                    value={stats.passedCount}
+                    trendUp={true}
+                />
+                <StatCard
+                    icon={Truck}
+                    color="bg-purple-100"
+                    label="Active Vehicles"
+                    value={stats.vehicleCount}
+                    trendUp={true}
+                />
+            </div>
+
+            {/* Recent Activity Table */}
+            <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                    <h3 className="font-bold text-gray-900">Recent Activity</h3>
+                    <button className="text-sm text-primary-vivid font-medium hover:underline">View All</button>
+                </div>
+                <table className="w-full text-left border-collapse">
+                    <thead>
+                        <tr className="bg-gray-50/50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                            <th className="px-6 py-4">ID</th>
+                            <th className="px-6 py-4">Activity</th>
+                            <th className="px-6 py-4">Type</th>
+                            <th className="px-6 py-4">Date</th>
+                            <th className="px-6 py-4">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                        {recentActivity.map((row, idx) => (
+                            <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
+                                <td className="px-6 py-4 text-sm font-medium text-gray-900">{row.id}</td>
+                                <td className="px-6 py-4">
+                                    <div className="text-sm font-medium text-gray-900">{row.title}</div>
+                                </td>
+                                <td className={`px-6 py-4 text-sm font-medium ${row.color}`}>{row.type}</td>
+                                <td className="px-6 py-4 text-sm text-gray-500">
+                                    {new Date(row.date).toLocaleDateString()}
+                                </td>
+                                <td className="px-6 py-4">
+                                    <StatusBadge status={row.status} />
+                                </td>
+                            </tr>
+                        ))}
+                        {recentActivity.length === 0 && (
+                            <tr>
+                                <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                                    No recent activity found.
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
+        </Layout>
+    );
+};
