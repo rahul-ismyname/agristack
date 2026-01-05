@@ -106,7 +106,7 @@ CREATE POLICY "Allow all access" ON public.gyan_vahan FOR ALL USING (true) WITH 
 -- 3. STORAGE CONFIGURATION
 -- ==========================================
 
--- 3.1 Create Buckets
+-- 3.1 Create Buckets (Safe to run repeatedly)
 INSERT INTO storage.buckets (id, name, public) VALUES ('images', 'images', true) ON CONFLICT (id) DO NOTHING;
 INSERT INTO storage.buckets (id, name, public) VALUES ('avatars', 'avatars', true) ON CONFLICT (id) DO NOTHING;
 
@@ -146,13 +146,10 @@ GRANT ALL ON public.profiles TO anon, authenticated, service_role;
 -- ==========================================
 
 -- Trigger to prevent social login signups if email doesn't exist as an email provider account
--- This ensures only pre-registered email accounts can use Google login.
 CREATE OR REPLACE FUNCTION public.restrict_social_signup()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- If provider is NOT email, it's a social login attempt
     IF (NEW.raw_app_meta_data->>'provider' != 'email') THEN
-        -- Check if an email-based user already exists with this email address
         IF NOT EXISTS (
             SELECT 1 FROM auth.users 
             WHERE email = NEW.email 
@@ -165,11 +162,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Note: The trigger below usually requires superuser permission to apply to the auth schema.
--- Admin users should run this block manually in the Supabase SQL Editor if needed:
--- DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
--- CREATE TRIGGER on_auth_user_created
---   BEFORE INSERT ON auth.users
 -- ==========================================
 -- 6. ADMIN & RBAC FEATURES
 -- ==========================================
@@ -206,8 +198,10 @@ DROP POLICY IF EXISTS "Admins can update all profiles" ON public.profiles;
 CREATE POLICY "Admins can update all profiles" ON public.profiles FOR UPDATE
 USING (auth.uid() IN (SELECT id FROM public.profiles WHERE role = 'admin'));
 
--- Allow Admins to modify Approval Status in seed_inspections
--- (Existing policies usually allow update, but explicit check ensures admin power)
+-- Allow users to view their own profile (Updated Fix)
+DROP POLICY IF EXISTS "Users can view own profile" ON public.profiles;
+CREATE POLICY "Users can view own profile" ON public.profiles
+FOR SELECT USING (auth.uid() = id);
 
 -- Announcements Policies
 -- Everyone can view active announcements
@@ -220,3 +214,27 @@ DROP POLICY IF EXISTS "Admins can manage announcements" ON public.announcements;
 CREATE POLICY "Admins can manage announcements" ON public.announcements FOR ALL
 USING (auth.uid() IN (SELECT id FROM public.profiles WHERE role = 'admin'));
 
+
+-- ==========================================
+-- 7. PROMOTING SPECIFIC ADMINS
+-- ==========================================
+
+-- Promote educatingworld47@gmail.com
+INSERT INTO public.profiles (id, name, role)
+VALUES (
+    'a2347b46-e286-4f25-baaa-aa16db0214db', 
+    'Admin User', 
+    'admin'
+)
+ON CONFLICT (id) DO UPDATE 
+SET role = 'admin';
+
+-- Promote rahulkr096522@gmail.com
+INSERT INTO public.profiles (id, name, role)
+VALUES (
+    '3be8d005-6cf7-480f-99dc-e22af305aa11', 
+    'Rahul Admin', 
+    'admin'
+)
+ON CONFLICT (id) DO UPDATE 
+SET role = 'admin';

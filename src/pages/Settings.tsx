@@ -62,7 +62,7 @@ export const Settings: React.FC = () => {
                                 <Input label="Full Name" value={profile?.name || 'Praveen Kumar'} disabled />
                                 <Input label="Email Address" value={user?.email || ''} disabled />
                                 <Input label="Phone Number" value={profile?.mobile || 'Not provided'} disabled />
-                                <Input label="Designation" value="District Officer" disabled />
+                                <Input label="Designation" value={profile?.role === 'admin' ? 'System Administrator' : 'District Officer'} disabled />
                             </div>
                         </div>
                     )}

@@ -34,6 +34,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (error && error.code !== 'PGRST116') {
                 console.error('Error fetching profile:', error);
             }
+            console.log("AuthContext: Fetched profile data:", data);
             setProfile(data || null);
         } finally {
             setProfileLoading(false);
