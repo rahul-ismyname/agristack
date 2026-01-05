@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Layout } from '../components/Layout';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
-import { Users, CheckCircle, Radio, UserCheck, UserX, Send, Trash2, Search, Filter } from 'lucide-react';
+import { Users, CheckCircle, Radio, UserX, Send } from 'lucide-react';
 
 export const Admin: React.FC = () => {
     const { isAdmin } = useAuth();
@@ -16,7 +16,6 @@ export const Admin: React.FC = () => {
     // State for Approvals Tab
     const [pendingInspections, setPendingInspections] = useState<any[]>([]);
     const [pendingVehicles, setPendingVehicles] = useState<any[]>([]);
-    const [loadingApprovals, setLoadingApprovals] = useState(false);
 
     // State for Broadcast Tab
     const [broadcastTitle, setBroadcastTitle] = useState('');
@@ -39,12 +38,11 @@ export const Admin: React.FC = () => {
             .order('updated_at', { ascending: false });
 
         if (data) setUsers(data);
+        if (error) console.error("Error fetching users:", error);
         setLoadingUsers(false);
     };
 
     const fetchPendingItems = async () => {
-        setLoadingApprovals(true);
-
         const { data: inspections } = await supabase
             .from('seed_inspections')
             .select('*')
@@ -57,8 +55,6 @@ export const Admin: React.FC = () => {
 
         if (inspections) setPendingInspections(inspections);
         if (vehicles) setPendingVehicles(vehicles);
-
-        setLoadingApprovals(false);
     };
 
     const handleRoleChange = async (userId: string, newRole: string) => {
@@ -69,6 +65,8 @@ export const Admin: React.FC = () => {
 
         if (!error) {
             setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
+        } else {
+            console.error("Error changing role:", error);
         }
     };
 
@@ -84,6 +82,8 @@ export const Admin: React.FC = () => {
             } else {
                 setPendingVehicles(pendingVehicles.filter(v => v.id !== id));
             }
+        } else {
+            console.error("Error in approval:", error);
         }
     };
 
