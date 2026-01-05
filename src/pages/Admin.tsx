@@ -22,6 +22,7 @@ export const Admin: React.FC = () => {
     const [broadcastMessage, setBroadcastMessage] = useState('');
     const [sendingBroadcast, setSendingBroadcast] = useState(false);
     const [broadcastSuccess, setBroadcastSuccess] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         if (isAdmin) {
@@ -86,36 +87,25 @@ export const Admin: React.FC = () => {
             console.error("Error in approval:", error);
         }
     };
-
-    const [error, setError] = useState<string | null>(null);
-
-    const isDemoAdmin = useAuth().user?.email === 'admin@agristack.gov';
-
     const sendBroadcast = async (e: React.FormEvent) => {
         e.preventDefault();
         setSendingBroadcast(true);
         setError(null);
         setBroadcastSuccess(false);
 
-        if (isDemoAdmin) {
-            setSendingBroadcast(false);
-            setError("Demo Admin cannot perform write operations. Please create a real admin account to use this feature.");
-            return;
-        }
-
-        const { error } = await supabase.from('announcements').insert({
+        const { error: insertError } = await supabase.from('announcements').insert({
             title: broadcastTitle,
             message: broadcastMessage,
             is_active: true
         });
 
-        if (!error) {
+        if (!insertError) {
             setBroadcastTitle('');
             setBroadcastMessage('');
             setBroadcastSuccess(true);
             setTimeout(() => setBroadcastSuccess(false), 3000);
         } else {
-            setError(error.message || "Failed to send broadcast");
+            setError(insertError.message || "Failed to send broadcast");
         }
         setSendingBroadcast(false);
     };
@@ -213,14 +203,14 @@ export const Admin: React.FC = () => {
                                                 {user.role === 'admin' ? (
                                                     <button
                                                         onClick={() => handleRoleChange(user.id, 'officer')}
-                                                        className="text-xs border border-gray-300 px-3 py-1.5 rounded hover:bg-gray-50"
+                                                        className="text-xs border border-gray-300 px-3 py-1.5 rounded hover:bg-gray-50 transition-colors"
                                                     >
                                                         Demote to Officer
                                                     </button>
                                                 ) : (
                                                     <button
                                                         onClick={() => handleRoleChange(user.id, 'admin')}
-                                                        className="text-xs bg-gray-900 text-white px-3 py-1.5 rounded hover:bg-black"
+                                                        className="text-xs bg-gray-900 text-white px-3 py-1.5 rounded hover:bg-black font-medium transition-all"
                                                     >
                                                         Promote to Admin
                                                     </button>

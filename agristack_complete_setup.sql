@@ -219,3 +219,4 @@ USING (is_active = true);
 DROP POLICY IF EXISTS "Admins can manage announcements" ON public.announcements;
 CREATE POLICY "Admins can manage announcements" ON public.announcements FOR ALL
 USING (auth.uid() IN (SELECT id FROM public.profiles WHERE role = 'admin'));
+

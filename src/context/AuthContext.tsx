@@ -11,7 +11,6 @@ interface AuthContextType {
     loading: boolean;
     profileLoading: boolean;
     isAdmin: boolean;
-    loginAsAdmin: () => void; // Temporary for hardcoded admin
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -22,9 +21,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [profile, setProfile] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
     const [profileLoading, setProfileLoading] = useState(false);
-
-    // Temporary state for hardcoded admin
-    const [isHardcodedAdmin, setIsHardcodedAdmin] = useState(false);
 
     const fetchProfile = async (userId: string) => {
         setProfileLoading(true);
@@ -45,14 +41,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     useEffect(() => {
-        // Check local storage for fake admin session
-        const fakeAdmin = localStorage.getItem('agristack_admin_session');
-        if (fakeAdmin === 'true') {
-            setIsHardcodedAdmin(true);
-            setLoading(false);
-            return;
-        }
-
         supabase.auth.getSession().then(({ data: { session } }) => {
             setSession(session);
             const currentUser = session?.user ?? null;
@@ -65,24 +53,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setSession(session);
             const currentUser = session?.user ?? null;
             setUser(currentUser);
-            if (currentUser) fetchProfile(currentUser.id);
-            else {
+            if (currentUser) {
+                fetchProfile(currentUser.id);
+            } else {
                 setProfile(null);
-                setProfileLoading(false);
             }
+            setLoading(false);
         });
 
         return () => subscription.unsubscribe();
     }, []);
 
     const signOut = async () => {
-        if (isHardcodedAdmin) {
-            localStorage.removeItem('agristack_admin_session');
-            setIsHardcodedAdmin(false);
-            // manually trigger a "refresh" of sorts or just redirect will handle it
-            window.location.href = '/login';
-            return;
-        }
         await supabase.auth.signOut();
     };
 
@@ -90,39 +72,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (user) await fetchProfile(user.id);
     };
 
-    const loginAsAdmin = () => {
-        localStorage.setItem('agristack_admin_session', 'true');
-        setIsHardcodedAdmin(true);
-        // Force a re-render or state update isn't strictly needed if we navigate immediately
-    };
-
-    // Derived state for isAdmin
-    // True if hardcoded admin OR if profile has role='admin'
-    const isAdmin = isHardcodedAdmin || (profile?.role === 'admin');
-
-    // For hardcoded admin, we mock the user/profile objects so the app doesn't crash
-    const effectiveUser = isHardcodedAdmin ? { id: 'admin', email: 'admin@agristack.gov', app_metadata: {}, user_metadata: {}, aud: 'authenticated', created_at: new Date().toISOString() } as User : user;
-    const effectiveProfile = isHardcodedAdmin ? { name: 'System Admin', role: 'admin', district: 'All', block: 'All' } : profile;
-
-    const effectiveSession = isHardcodedAdmin ? {
-        access_token: 'mock-token',
-        refresh_token: 'mock-refresh-token',
-        expires_in: 3600,
-        token_type: 'bearer',
-        user: effectiveUser
-    } as Session : session;
+    const isAdmin = profile?.role === 'admin';
 
     return (
         <AuthContext.Provider value={{
-            session: effectiveSession,
-            user: effectiveUser,
-            profile: effectiveProfile,
+            session,
+            user,
+            profile,
             signOut,
             refreshProfile,
             loading,
             profileLoading,
-            isAdmin,
-            loginAsAdmin
+            isAdmin
         }}>
             {!loading && children}
         </AuthContext.Provider>

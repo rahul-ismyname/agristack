@@ -5,7 +5,6 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Input } from '../components/ui/Input';
 import loginBg from '../assets/login-bg.png';
 import { supabase } from '../lib/supabase';
-import { useAuth } from '../context/AuthContext';
 
 // Placeholder for Google Icon
 const GoogleIcon = () => (
@@ -42,7 +41,6 @@ export const Login: React.FC = () => {
         }
     }, [location]);
 
-    const { loginAsAdmin } = useAuth();
 
     const handleGoogleLogin = async () => {
         setIsLoading(true);
@@ -67,15 +65,6 @@ export const Login: React.FC = () => {
         setError(null);
         setSuccessMessage(null);
 
-        // Hardcoded Admin Check
-        if (email === 'admin' && password === 'password') {
-            // Simulate network delay for effect
-            setTimeout(() => {
-                loginAsAdmin();
-                navigate('/dashboard');
-            }, 800);
-            return;
-        }
 
         // Supabase Auth Login
         const { error } = await supabase.auth.signInWithPassword({
@@ -154,8 +143,8 @@ export const Login: React.FC = () => {
 
                     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                         <Input
-                            label="Email Address or Username"
-                            type="text"
+                            label="Email Address"
+                            type="email"
                             placeholder="name@company.com"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
@@ -217,20 +206,6 @@ export const Login: React.FC = () => {
                     </button>
                 </div>
 
-                <div className="mt-4 pt-4 border-t border-gray-100">
-                    <div className="text-center">
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setEmail('admin');
-                                setPassword('password');
-                            }}
-                            className="text-xs text-center text-gray-400 hover:text-primary-vivid transition-colors"
-                        >
-                            Admin Demo Login
-                        </button>
-                    </div>
-                </div>
 
                 <div className="mt-6 text-center text-sm text-gray-500">
                     Don't have an account? <Link to="/register" className="font-bold text-gray-900 hover:text-primary-vivid">Sign Up</Link>
