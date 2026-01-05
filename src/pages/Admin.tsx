@@ -3,11 +3,20 @@ import { motion } from 'framer-motion';
 import { Layout } from '../components/Layout';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
-import { Users, CheckCircle, Radio, UserX, Send } from 'lucide-react';
+import { Users, CheckCircle, Radio, UserX, Send, LayoutDashboard, Sprout, AlertCircle, ArrowRight, Trash2, Clock } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export const Admin: React.FC = () => {
     const { isAdmin } = useAuth();
-    const [activeTab, setActiveTab] = useState<'users' | 'approvals' | 'broadcast'>('users');
+    const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'approvals' | 'broadcast'>('overview');
+
+    // Stats State
+    const [stats, setStats] = useState({
+        totalFarmers: 0,
+        activeUsers: 0,
+        pendingInspections: 0,
+        pendingVehicles: 0
+    });
 
     // State for Users Tab
     const [users, setUsers] = useState<any[]>([]);
@@ -23,13 +32,32 @@ export const Admin: React.FC = () => {
     const [sendingBroadcast, setSendingBroadcast] = useState(false);
     const [broadcastSuccess, setBroadcastSuccess] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [recentBroadcasts, setRecentBroadcasts] = useState<any[]>([]);
 
     useEffect(() => {
         if (isAdmin) {
+            fetchStats();
             fetchUsers();
             fetchPendingItems();
+            fetchRecentBroadcasts();
         }
     }, [isAdmin]);
+
+    const fetchStats = async () => {
+        const { count: farmerCount } = await supabase
+            .from('farmers')
+            .select('*', { count: 'exact', head: true });
+
+        const { count: userCount } = await supabase
+            .from('profiles')
+            .select('*', { count: 'exact', head: true });
+
+        setStats(prev => ({
+            ...prev,
+            totalFarmers: farmerCount || 0,
+            activeUsers: userCount || 0
+        }));
+    };
 
     const fetchUsers = async () => {
         setLoadingUsers(true);
@@ -56,6 +84,22 @@ export const Admin: React.FC = () => {
 
         if (inspections) setPendingInspections(inspections);
         if (vehicles) setPendingVehicles(vehicles);
+
+        setStats(prev => ({
+            ...prev,
+            pendingInspections: inspections?.length || 0,
+            pendingVehicles: vehicles?.length || 0
+        }));
+    };
+
+    const fetchRecentBroadcasts = async () => {
+        const { data } = await supabase
+            .from('announcements')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(5);
+
+        if (data) setRecentBroadcasts(data);
     };
 
     const handleRoleChange = async (userId: string, newRole: string) => {
@@ -79,14 +123,19 @@ export const Admin: React.FC = () => {
 
         if (!error) {
             if (table === 'seed_inspections') {
-                setPendingInspections(pendingInspections.filter(i => i.id !== id));
+                const updatedList = pendingInspections.filter(i => i.id !== id);
+                setPendingInspections(updatedList);
+                setStats(prev => ({ ...prev, pendingInspections: updatedList.length }));
             } else {
-                setPendingVehicles(pendingVehicles.filter(v => v.id !== id));
+                const updatedList = pendingVehicles.filter(v => v.id !== id);
+                setPendingVehicles(updatedList);
+                setStats(prev => ({ ...prev, pendingVehicles: updatedList.length }));
             }
         } else {
             console.error("Error in approval:", error);
         }
     };
+
     const sendBroadcast = async (e: React.FormEvent) => {
         e.preventDefault();
         setSendingBroadcast(true);
@@ -103,11 +152,23 @@ export const Admin: React.FC = () => {
             setBroadcastTitle('');
             setBroadcastMessage('');
             setBroadcastSuccess(true);
+            fetchRecentBroadcasts(); // Refresh list
             setTimeout(() => setBroadcastSuccess(false), 3000);
         } else {
             setError(insertError.message || "Failed to send broadcast");
         }
         setSendingBroadcast(false);
+    };
+
+    const deactivateBroadcast = async (id: string) => {
+        const { error } = await supabase
+            .from('announcements')
+            .update({ is_active: false })
+            .eq('id', id);
+
+        if (!error) {
+            setRecentBroadcasts(prev => prev.map(b => b.id === id ? { ...b, is_active: false } : b));
+        }
     };
 
     if (!isAdmin) {
@@ -129,6 +190,16 @@ export const Admin: React.FC = () => {
     return (
         <Layout title="Admin Portal">
             <div className="flex gap-6 mb-8 border-b border-gray-200">
+                <button
+                    onClick={() => setActiveTab('overview')}
+                    className={`pb-4 px-2 text-sm font-medium flex items-center gap-2 transition-colors relative ${activeTab === 'overview' ? 'text-primary-vivid' : 'text-gray-500 hover:text-gray-700'
+                        }`}
+                >
+                    <LayoutDashboard size={18} /> Overview
+                    {activeTab === 'overview' && (
+                        <motion.div layoutId="admin-tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-vivid" />
+                    )}
+                </button>
                 <button
                     onClick={() => setActiveTab('users')}
                     className={`pb-4 px-2 text-sm font-medium flex items-center gap-2 transition-colors relative ${activeTab === 'users' ? 'text-primary-vivid' : 'text-gray-500 hover:text-gray-700'
@@ -168,9 +239,74 @@ export const Admin: React.FC = () => {
             </div>
 
             <div className="space-y-6">
+                {/* OVERVIEW TAB */}
+                {activeTab === 'overview' && (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                        {/* Card 1: Pending Actions */}
+                        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
+                            <div className="absolute right-0 top-0 w-32 h-32 bg-orange-50 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
+                            <div className="relative">
+                                <div className="flex items-center gap-3 mb-2 text-gray-500">
+                                    <AlertCircle className="w-5 h-5" />
+                                    <span className="text-sm font-medium">Pending Actions</span>
+                                </div>
+                                <div className="text-4xl font-bold text-gray-900 mb-1">
+                                    {stats.pendingInspections + stats.pendingVehicles}
+                                </div>
+                                <div className="text-sm text-orange-600 font-medium mb-4">Requires Attention</div>
+                                <button
+                                    onClick={() => setActiveTab('approvals')}
+                                    className="text-sm font-semibold text-gray-900 flex items-center gap-2 group-hover:gap-3 transition-all"
+                                >
+                                    Review Now <ArrowRight size={16} />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Card 2: Total Farmers */}
+                        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
+                            <div className="absolute right-0 top-0 w-32 h-32 bg-green-50 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
+                            <div className="relative">
+                                <div className="flex items-center gap-3 mb-2 text-gray-500">
+                                    <Sprout className="w-5 h-5" />
+                                    <span className="text-sm font-medium">Total Farmers</span>
+                                </div>
+                                <div className="text-4xl font-bold text-gray-900 mb-1">
+                                    {stats.totalFarmers}
+                                </div>
+                                <div className="text-sm text-green-600 font-medium mb-4">+12 this week</div>
+                                <Link to="/farmers" className="text-sm font-semibold text-gray-900 flex items-center gap-2 group-hover:gap-3 transition-all">
+                                    View Registry <ArrowRight size={16} />
+                                </Link>
+                            </div>
+                        </div>
+
+                        {/* Card 3: Active Officers */}
+                        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
+                            <div className="absolute right-0 top-0 w-32 h-32 bg-blue-50 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
+                            <div className="relative">
+                                <div className="flex items-center gap-3 mb-2 text-gray-500">
+                                    <Users className="w-5 h-5" />
+                                    <span className="text-sm font-medium">Active Officers</span>
+                                </div>
+                                <div className="text-4xl font-bold text-gray-900 mb-1">
+                                    {stats.activeUsers}
+                                </div>
+                                <div className="text-sm text-blue-600 font-medium mb-4">Across active districts</div>
+                                <button
+                                    onClick={() => setActiveTab('users')}
+                                    className="text-sm font-semibold text-gray-900 flex items-center gap-2 group-hover:gap-3 transition-all"
+                                >
+                                    Manage Staff <ArrowRight size={16} />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* USERS TAB */}
                 {activeTab === 'users' && (
-                    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+                    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm animate-in fade-in slide-in-from-bottom-2">
                         <div className="overflow-x-auto">
                             <table className="w-full text-sm text-left">
                                 <thead className="bg-gray-50 text-gray-700 font-semibold border-b border-gray-200">
@@ -231,7 +367,7 @@ export const Admin: React.FC = () => {
 
                 {/* APPROVALS TAB */}
                 {activeTab === 'approvals' && (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-in fade-in slide-in-from-bottom-2">
                         {/* Seed Inspections Column */}
                         <div className="space-y-4">
                             <h3 className="font-bold text-gray-800 flex items-center gap-2">
@@ -322,7 +458,8 @@ export const Admin: React.FC = () => {
 
                 {/* BROADCAST TAB */}
                 {activeTab === 'broadcast' && (
-                    <div className="max-w-xl mx-auto">
+                    <div className="max-w-xl mx-auto animate-in fade-in slide-in-from-bottom-2 space-y-8">
+                        {/* New Broadcast Form */}
                         <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
                             <div className="flex items-center gap-3 mb-6">
                                 <div className="w-10 h-10 bg-primary-vivid/10 rounded-full flex items-center justify-center text-primary-vivid">
@@ -379,6 +516,44 @@ export const Admin: React.FC = () => {
                                     </div>
                                 )}
                             </form>
+                        </div>
+
+                        {/* Recent Activity List */}
+                        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                            <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                <Clock size={16} className="text-gray-500" /> Recent Broadcasts
+                            </h3>
+                            <div className="space-y-3">
+                                {recentBroadcasts.length === 0 ? (
+                                    <p className="text-sm text-gray-500 text-center py-4 italic">No recent broadcasts</p>
+                                ) : (
+                                    recentBroadcasts.map((b) => (
+                                        <div key={b.id} className="flex justify-between items-start p-3 bg-gray-50 rounded-lg group">
+                                            <div>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-semibold text-gray-800 text-sm">{b.title}</span>
+                                                    {b.is_active ? (
+                                                        <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-medium">Active</span>
+                                                    ) : (
+                                                        <span className="text-[10px] bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded-full font-medium">Inactive</span>
+                                                    )}
+                                                </div>
+                                                <p className="text-gray-500 text-xs mt-1 line-clamp-1">{b.message}</p>
+                                                <p className="text-[10px] text-gray-400 mt-1">{new Date(b.created_at).toLocaleDateString()}</p>
+                                            </div>
+                                            {b.is_active && (
+                                                <button
+                                                    onClick={() => deactivateBroadcast(b.id)}
+                                                    className="text-red-500 hover:bg-red-50 p-1.5 rounded transition-colors opacity-0 group-hover:opacity-100"
+                                                    title="Deactivate Broadcast"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            )}
+                                        </div>
+                                    ))
+                                )}
+                            </div>
                         </div>
                     </div>
                 )}

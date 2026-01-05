@@ -94,11 +94,17 @@ export const Dashboard: React.FC = () => {
                     .from('announcements')
                     .select('*')
                     .eq('is_active', true)
+                    .gt('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()) // Auto-expire after 24 hours
                     .order('created_at', { ascending: false })
                     .limit(1)
                     .single();
 
-                if (announcementData) setAnnouncement(announcementData);
+                if (announcementData) {
+                    const dismissed = JSON.parse(localStorage.getItem('dismissedAnnouncements') || '[]');
+                    if (!dismissed.includes(announcementData.id)) {
+                        setAnnouncement(announcementData);
+                    }
+                }
 
             } catch (error) {
                 console.error("Failed to load dashboard data:", error);
@@ -117,14 +123,24 @@ export const Dashboard: React.FC = () => {
             ) : (
                 <>
                     {announcement && (
-                        <div className="mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-4 flex items-start gap-4">
+                        <div className="mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-4 flex items-start gap-4 relative group">
                             <div className="bg-blue-100 p-2 rounded-full text-blue-600">
                                 <FileText size={20} />
                             </div>
-                            <div>
+                            <div className="flex-1">
                                 <h3 className="font-bold text-gray-900 text-sm">{announcement.title}</h3>
                                 <p className="text-gray-600 text-sm mt-1">{announcement.message}</p>
                             </div>
+                            <button
+                                onClick={() => {
+                                    const dismissed = JSON.parse(localStorage.getItem('dismissedAnnouncements') || '[]');
+                                    localStorage.setItem('dismissedAnnouncements', JSON.stringify([...dismissed, announcement.id]));
+                                    setAnnouncement(null);
+                                }}
+                                className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-white/50 transition-colors"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 18 12" /></svg>
+                            </button>
                         </div>
                     )}
 

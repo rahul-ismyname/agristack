@@ -2,14 +2,23 @@ import { supabase } from './supabase';
 
 // --- Farmers API ---
 
-export const getFarmers = async () => {
-    const { data, error } = await supabase
+interface GetFarmersParams {
+    page?: number;
+    limit?: number;
+}
+
+export const getFarmers = async ({ page = 1, limit = 10 }: GetFarmersParams = {}) => {
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    const { data, count, error } = await supabase
         .from('farmers')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .select('*', { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .range(from, to);
 
     if (error) throw error;
-    return data;
+    return { data, count };
 };
 
 export const createFarmer = async (farmerData: any) => {
@@ -236,4 +245,36 @@ export const getRecentActivity = async () => {
         .slice(0, 5);
 
     return combined;
+};
+
+// --- Export API ---
+
+export const getAllFarmers = async () => {
+    const { data, error } = await supabase
+        .from('farmers')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data;
+};
+
+export const getAllInspections = async () => {
+    const { data, error } = await supabase
+        .from('seed_inspections')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data;
+};
+
+export const getAllGyanVahan = async () => {
+    const { data, error } = await supabase
+        .from('gyan_vahan')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data;
 };

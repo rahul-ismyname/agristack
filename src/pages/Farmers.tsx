@@ -9,16 +9,20 @@ export const Farmers: React.FC = () => {
     const [farmers, setFarmers] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const LIMIT = 10;
 
     useEffect(() => {
         loadFarmers();
-    }, []);
+    }, [page]); // Reload when page changes
 
     const loadFarmers = async () => {
         try {
             setIsLoading(true);
-            const data = await getFarmers();
+            const { data, count } = await getFarmers({ page, limit: LIMIT });
             setFarmers(data || []);
+            if (count) setTotalPages(Math.ceil(count / LIMIT));
         } catch (error) {
             console.error('Error loading farmers:', error);
         } finally {
@@ -49,11 +53,6 @@ export const Farmers: React.FC = () => {
         }
     };
 
-    const filteredFarmers = farmers.filter(farmer =>
-        farmer.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        farmer.mobile?.includes(searchQuery) ||
-        farmer.aadhaar?.includes(searchQuery)
-    );
 
     return (
         <Layout title="Farmer Registry">
@@ -78,7 +77,7 @@ export const Farmers: React.FC = () => {
                 </div>
 
                 {/* Farmers Table */}
-                <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col h-full">
                     {isLoading ? (
                         <div className="flex items-center justify-center p-12">
                             <Loader2 className="w-8 h-8 text-primary-vivid animate-spin" />
@@ -95,7 +94,7 @@ export const Farmers: React.FC = () => {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
-                                    {filteredFarmers.map((farmer) => (
+                                    {farmers.map((farmer) => (
                                         <tr key={farmer.id} className="hover:bg-gray-50/50 transition-colors">
                                             <td className="px-6 py-4">
                                                 <div className="font-medium text-gray-900">{farmer.full_name}</div>
@@ -137,11 +136,34 @@ export const Farmers: React.FC = () => {
                             </table>
                         </div>
                     )}
-                    {!isLoading && filteredFarmers.length === 0 && (
+                    {!isLoading && farmers.length === 0 && (
                         <div className="p-12 text-center text-gray-500">
-                            {farmers.length === 0 ? "No farmers registered yet. Add one to get started." : "No farmers found matching your search."}
+                            {searchQuery ? "No farmers found matching your search." : "No farmers registered yet. Add one to get started."}
                         </div>
                     )}
+
+                    {/* Pagination Controls */}
+                    <div className="border-t border-gray-200 px-6 py-4 flex items-center justify-between bg-gray-50/50">
+                        <span className="text-sm text-gray-500">
+                            Page <span className="font-semibold text-gray-900">{page}</span> of <span className="font-semibold text-gray-900">{totalPages}</span>
+                        </span>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => setPage(p => Math.max(1, p - 1))}
+                                disabled={page === 1 || isLoading}
+                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                            >
+                                Previous
+                            </button>
+                            <button
+                                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                disabled={page === totalPages || isLoading}
+                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                            >
+                                Next
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <FarmerRegistrationModal

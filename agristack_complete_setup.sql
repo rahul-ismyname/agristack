@@ -216,10 +216,21 @@ USING (auth.uid() IN (SELECT id FROM public.profiles WHERE role = 'admin'));
 
 
 -- ==========================================
--- 7. PROMOTING SPECIFIC ADMINS
+-- 7. PROMOTING SPECIFIC ADMINS (HARDCODED)
 -- ==========================================
 
--- Promote educatingworld47@gmail.com
+-- Promote rahulkr096522@gmail.com (Using confirmed ID from debug)
+INSERT INTO public.profiles (id, name, role)
+VALUES (
+    '3be8d005-6cf7-480f-99dc-e22af305aa11', 
+    'Rahul Admin', 
+    'admin'
+)
+ON CONFLICT (id) DO UPDATE 
+SET role = 'admin';
+
+
+-- Promote educatingworld47@gmail.com (Using known ID)
 INSERT INTO public.profiles (id, name, role)
 VALUES (
     'a2347b46-e286-4f25-baaa-aa16db0214db', 
@@ -229,12 +240,10 @@ VALUES (
 ON CONFLICT (id) DO UPDATE 
 SET role = 'admin';
 
--- Promote rahulkr096522@gmail.com
+-- Fallback: Promote by email just in case IDs differ
 INSERT INTO public.profiles (id, name, role)
-VALUES (
-    '3be8d005-6cf7-480f-99dc-e22af305aa11', 
-    'Rahul Admin', 
-    'admin'
-)
+SELECT id, 'Admin User', 'admin'
+FROM auth.users
+WHERE email IN ('educatingworld47@gmail.com', 'rahulkr096522@gmail.com')
 ON CONFLICT (id) DO UPDATE 
 SET role = 'admin';
