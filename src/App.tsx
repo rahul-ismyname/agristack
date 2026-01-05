@@ -6,6 +6,7 @@ import { Farmers } from './pages/Farmers';
 import { Inspections } from './pages/Inspections';
 import { Reports } from './pages/Reports';
 import { Settings } from './pages/Settings';
+import { Profile } from './pages/Profile';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
 
@@ -53,6 +54,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Settings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
               </ProtectedRoute>
             }
           />

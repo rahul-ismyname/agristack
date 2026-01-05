@@ -10,8 +10,10 @@ import {
     Bell,
     HelpCircle,
     X,
+    LogOut,
     type LucideIcon
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 interface SidebarItemProps {
     icon: LucideIcon;
@@ -42,6 +44,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, title = "Dashboard" })
     const location = useLocation();
     const isActive = (path: string) => location.pathname === path;
     const [isHelpOpen, setIsHelpOpen] = React.useState(false);
+    const { signOut, user } = useAuth();
 
     return (
         <div className="flex h-screen bg-[#FAFAFA] font-outfit">
@@ -132,15 +135,23 @@ export const Layout: React.FC<LayoutProps> = ({ children, title = "Dashboard" })
                 </nav>
 
                 <div className="p-4 border-t border-gray-100">
-                    <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-orange-100 flex items-center justify-center text-orange-700 font-bold text-sm">
-                            RS
+                    <Link to="/profile" className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors group">
+                        <div className="w-9 h-9 rounded-full bg-orange-100 flex items-center justify-center text-orange-700 font-bold text-sm group-hover:bg-orange-200 transition-colors">
+                            {user?.email?.[0].toUpperCase() || 'U'}
                         </div>
-                        <div>
-                            <div className="text-sm font-semibold text-gray-900">Rajesh Singh</div>
-                            <div className="text-xs text-gray-500">District Officer</div>
+                        <div className="flex-1 overflow-hidden">
+                            <div className="text-sm font-semibold text-gray-900 truncate">{user?.email?.split('@')[0]}</div>
+                            <div className="text-xs text-gray-500">View Profile</div>
                         </div>
-                    </div>
+                    </Link>
+
+                    <button
+                        onClick={() => signOut()}
+                        className="w-full mt-2 flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                        <LogOut className="w-4 h-4" />
+                        Log Out
+                    </button>
                 </div>
             </div>
 

@@ -35,6 +35,7 @@ export const Register: React.FC = () => {
             email: formData.email,
             password: formData.password,
             options: {
+                emailRedirectTo: `${window.location.origin}/login`,
                 data: {
                     full_name: formData.name,
                     mobile: formData.mobile,
