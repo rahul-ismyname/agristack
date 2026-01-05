@@ -1,6 +1,3 @@
--- Fix RLS policies for farmers table to ensure INSERTs works
--- Run this in your Supabase SQL Editor
-
 -- 1. Ensure RLS is enabled
 alter table public.farmers enable row level security;
 
