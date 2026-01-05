@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { getDashboardStats, getRecentActivity } from '../lib/api';
+import { supabase } from '../lib/supabase';
 
 const StatCard = ({ icon: Icon, color, label, value, trend, trendUp, to, state }: any) => {
     const navigate = useNavigate();
@@ -76,6 +77,7 @@ export const Dashboard: React.FC = () => {
     });
     const [recentActivity, setRecentActivity] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [announcement, setAnnouncement] = useState<any>(null);
 
     useEffect(() => {
         const loadDashboardData = async () => {
@@ -86,6 +88,18 @@ export const Dashboard: React.FC = () => {
                 ]);
                 setStats(statsData);
                 setRecentActivity(activityData);
+
+                // Fetch latest announcement
+                const { data: announcementData } = await supabase
+                    .from('announcements')
+                    .select('*')
+                    .eq('is_active', true)
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .single();
+
+                if (announcementData) setAnnouncement(announcementData);
+
             } catch (error) {
                 console.error("Failed to load dashboard data:", error);
             } finally {
@@ -102,6 +116,18 @@ export const Dashboard: React.FC = () => {
                 <DashboardSkeleton />
             ) : (
                 <>
+                    {announcement && (
+                        <div className="mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-4 flex items-start gap-4">
+                            <div className="bg-blue-100 p-2 rounded-full text-blue-600">
+                                <FileText size={20} />
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-gray-900 text-sm">{announcement.title}</h3>
+                                <p className="text-gray-600 text-sm mt-1">{announcement.message}</p>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="mb-8">
                         <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome back, Officer</h2>
                         <p className="text-gray-500">Here's what's happening in your district today.</p>

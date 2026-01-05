@@ -7,6 +7,7 @@ import { Inspections } from './pages/Inspections';
 import { Reports } from './pages/Reports';
 import { Settings } from './pages/Settings';
 import { Profile } from './pages/Profile';
+import { Admin } from './pages/Admin';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
 
@@ -62,6 +63,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute>
+                <Admin />
               </ProtectedRoute>
             }
           />

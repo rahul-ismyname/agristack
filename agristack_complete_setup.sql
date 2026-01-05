@@ -170,4 +170,52 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 -- CREATE TRIGGER on_auth_user_created
 --   BEFORE INSERT ON auth.users
---   FOR EACH ROW EXECUTE FUNCTION public.restrict_social_signup();
+-- ==========================================
+-- 6. ADMIN & RBAC FEATURES
+-- ==========================================
+
+-- 6.1 Add Role to Profiles
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS role TEXT DEFAULT 'officer' CHECK (role IN ('admin', 'officer'));
+
+-- 6.2 Add Approval Status to Inspections
+ALTER TABLE public.seed_inspections ADD COLUMN IF NOT EXISTS approval_status TEXT DEFAULT 'pending' CHECK (approval_status IN ('pending', 'approved', 'rejected'));
+ALTER TABLE public.gyan_vahan ADD COLUMN IF NOT EXISTS approval_status TEXT DEFAULT 'pending' CHECK (approval_status IN ('pending', 'approved', 'rejected'));
+
+-- 6.3 Announcements Table (Broadcast System)
+CREATE TABLE IF NOT EXISTS public.announcements (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
+  title TEXT NOT NULL,
+  message TEXT NOT NULL,
+  created_by UUID REFERENCES auth.users(id),
+  is_active BOOLEAN DEFAULT true
+);
+
+-- Enable RLS on announcements
+ALTER TABLE public.announcements ENABLE ROW LEVEL SECURITY;
+
+-- 6.4 Admin Policies (Superuser Access)
+
+-- Allow Admins to see ALL profiles
+DROP POLICY IF EXISTS "Admins can view all profiles" ON public.profiles;
+CREATE POLICY "Admins can view all profiles" ON public.profiles FOR SELECT 
+USING (auth.uid() IN (SELECT id FROM public.profiles WHERE role = 'admin'));
+
+-- Allow Admins to update ALL profiles (for promoting users)
+DROP POLICY IF EXISTS "Admins can update all profiles" ON public.profiles;
+CREATE POLICY "Admins can update all profiles" ON public.profiles FOR UPDATE
+USING (auth.uid() IN (SELECT id FROM public.profiles WHERE role = 'admin'));
+
+-- Allow Admins to modify Approval Status in seed_inspections
+-- (Existing policies usually allow update, but explicit check ensures admin power)
+
+-- Announcements Policies
+-- Everyone can view active announcements
+DROP POLICY IF EXISTS "Everyone can view active announcements" ON public.announcements;
+CREATE POLICY "Everyone can view active announcements" ON public.announcements FOR SELECT
+USING (is_active = true);
+
+-- Only Admins can create/manage announcements
+DROP POLICY IF EXISTS "Admins can manage announcements" ON public.announcements;
+CREATE POLICY "Admins can manage announcements" ON public.announcements FOR ALL
+USING (auth.uid() IN (SELECT id FROM public.profiles WHERE role = 'admin'));

@@ -5,6 +5,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Input } from '../components/ui/Input';
 import loginBg from '../assets/login-bg.png';
 import { supabase } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
 
 // Placeholder for Google Icon
 const GoogleIcon = () => (
@@ -41,6 +42,8 @@ export const Login: React.FC = () => {
         }
     }, [location]);
 
+    const { loginAsAdmin } = useAuth();
+
     const handleGoogleLogin = async () => {
         setIsLoading(true);
         setError(null);
@@ -48,10 +51,7 @@ export const Login: React.FC = () => {
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: `${window.location.origin}/dashboard`,
-                    // This tells Supabase not to create a new user if one doesn't exist
-                    // Note: Supabase doesn't have a direct 'existing_only' flag in client-side OAuth
-                    // So we rely on the database trigger to reject unauthorized signups
+                    redirectTo: `${window.location.origin}/dashboard`
                 }
             });
             if (error) throw error;
@@ -67,6 +67,16 @@ export const Login: React.FC = () => {
         setError(null);
         setSuccessMessage(null);
 
+        // Hardcoded Admin Check
+        if (email === 'admin' && password === 'password') {
+            // Simulate network delay for effect
+            setTimeout(() => {
+                loginAsAdmin();
+                navigate('/dashboard');
+            }, 800);
+            return;
+        }
+
         // Supabase Auth Login
         const { error } = await supabase.auth.signInWithPassword({
             email: email,
@@ -79,7 +89,7 @@ export const Login: React.FC = () => {
         } else {
             // Success
             console.log('Login success');
-            navigate('/dashboard'); // Need to creating dashboard route later
+            navigate('/dashboard');
         }
     };
 
@@ -144,8 +154,8 @@ export const Login: React.FC = () => {
 
                     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                         <Input
-                            label="Email Address"
-                            type="email"
+                            label="Email Address or Username"
+                            type="text"
                             placeholder="name@company.com"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
@@ -194,29 +204,42 @@ export const Login: React.FC = () => {
                         <div className="relative flex justify-center text-xs"><span className="px-2 bg-white text-gray-400">Or continue with</span></div>
                     </div>
 
-                    <div className="grid grid-cols-1">
+                    <button
+                        onClick={handleGoogleLogin}
+                        disabled={isLoading}
+                        className="flex items-center justify-center gap-2 px-4 py-2.5 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors font-medium text-gray-700 text-sm w-full disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {isLoading ? (
+                            <div className="w-5 h-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+                        ) : (
+                            <><GoogleIcon /> Google</>
+                        )}
+                    </button>
+                </div>
+
+                <div className="mt-4 pt-4 border-t border-gray-100">
+                    <div className="text-center">
                         <button
-                            onClick={handleGoogleLogin}
-                            disabled={isLoading}
-                            className="flex items-center justify-center gap-2 px-4 py-2.5 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors font-medium text-gray-700 text-sm w-full disabled:opacity-50 disabled:cursor-not-allowed"
+                            type="button"
+                            onClick={() => {
+                                setEmail('admin');
+                                setPassword('password');
+                            }}
+                            className="text-xs text-center text-gray-400 hover:text-primary-vivid transition-colors"
                         >
-                            {isLoading ? (
-                                <div className="w-5 h-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
-                            ) : (
-                                <><GoogleIcon /> Google</>
-                            )}
+                            Admin Demo Login
                         </button>
                     </div>
+                </div>
 
-                    <div className="mt-6 text-center text-sm text-gray-500">
-                        Don't have an account? <Link to="/register" className="font-bold text-gray-900 hover:text-primary-vivid">Sign Up</Link>
-                    </div>
+                <div className="mt-6 text-center text-sm text-gray-500">
+                    Don't have an account? <Link to="/register" className="font-bold text-gray-900 hover:text-primary-vivid">Sign Up</Link>
+                </div>
 
-                    <div className="flex items-center justify-center gap-6 text-xs text-gray-400 pt-4">
-                        <a href="#" className="hover:text-gray-600">Privacy Policy</a>
-                        <a href="#" className="hover:text-gray-600">Terms of Service</a>
-                        <a href="#" className="hover:text-gray-600">Help</a>
-                    </div>
+                <div className="flex items-center justify-center gap-6 text-xs text-gray-400 pt-4">
+                    <a href="#" className="hover:text-gray-600">Privacy Policy</a>
+                    <a href="#" className="hover:text-gray-600">Terms of Service</a>
+                    <a href="#" className="hover:text-gray-600">Help</a>
                 </div>
             </div>
         </div>

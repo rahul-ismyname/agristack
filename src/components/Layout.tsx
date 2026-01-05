@@ -11,6 +11,7 @@ import {
     HelpCircle,
     X,
     LogOut,
+    ShieldCheck,
     type LucideIcon
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -45,7 +46,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, title = "Dashboard" })
     const navigate = useNavigate();
     const isActive = (path: string) => location.pathname === path;
     const [isHelpOpen, setIsHelpOpen] = React.useState(false);
-    const { signOut, profile } = useAuth();
+    const { signOut, profile, isAdmin } = useAuth();
 
     const handleLogout = async () => {
         try {
@@ -143,6 +144,11 @@ export const Layout: React.FC<LayoutProps> = ({ children, title = "Dashboard" })
                     <SidebarItem icon={Users} label="Farmers" to="/farmers" active={isActive('/farmers')} />
                     <SidebarItem icon={ClipboardCheck} label="Inspections" to="/inspections" active={isActive('/inspections')} />
                     <SidebarItem icon={BarChart3} label="Reports" to="/reports" active={isActive('/reports')} />
+                    {isAdmin && (
+                        <div className="py-2">
+                            <SidebarItem icon={ShieldCheck} label="Admin Portal" to="/admin" active={isActive('/admin')} />
+                        </div>
+                    )}
                     <SidebarItem icon={Settings} label="Settings" to="/settings" active={isActive('/settings')} />
                 </nav>
 
