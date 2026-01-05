@@ -140,3 +140,34 @@ GRANT ALL ON public.farmers TO anon, authenticated, service_role;
 GRANT ALL ON public.seed_inspections TO anon, authenticated, service_role;
 GRANT ALL ON public.gyan_vahan TO anon, authenticated, service_role;
 GRANT ALL ON public.profiles TO anon, authenticated, service_role;
+
+-- ==========================================
+-- 5. SERVER-SIDE AUTH HOOKS (RESTRICTED ACCESS)
+-- ==========================================
+
+-- Trigger to prevent social login signups if email doesn't exist as an email provider account
+-- This ensures only pre-registered email accounts can use Google login.
+CREATE OR REPLACE FUNCTION public.restrict_social_signup()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- If provider is NOT email, it's a social login attempt
+    IF (NEW.raw_app_meta_data->>'provider' != 'email') THEN
+        -- Check if an email-based user already exists with this email address
+        IF NOT EXISTS (
+            SELECT 1 FROM auth.users 
+            WHERE email = NEW.email 
+            AND (raw_app_meta_data->>'provider' = 'email' OR is_sso_user = false)
+        ) THEN
+            RAISE EXCEPTION 'Social signup is disabled. Please register with your email account first.';
+        END IF;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Note: The trigger below usually requires superuser permission to apply to the auth schema.
+-- Admin users should run this block manually in the Supabase SQL Editor if needed:
+-- DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+-- CREATE TRIGGER on_auth_user_created
+--   BEFORE INSERT ON auth.users
+--   FOR EACH ROW EXECUTE FUNCTION public.restrict_social_signup();

@@ -32,7 +32,34 @@ export const Login: React.FC = () => {
             // Clear location state to avoid message reappearing on refresh
             window.history.replaceState({}, document.title);
         }
+
+        // Check for error in URL (from OAuth redirect)
+        const params = new URLSearchParams(window.location.hash.substring(1));
+        const errorDescription = params.get('error_description');
+        if (errorDescription) {
+            setError(errorDescription.replace(/\+/g, ' '));
+        }
     }, [location]);
+
+    const handleGoogleLogin = async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const { error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: `${window.location.origin}/dashboard`,
+                    // This tells Supabase not to create a new user if one doesn't exist
+                    // Note: Supabase doesn't have a direct 'existing_only' flag in client-side OAuth
+                    // So we rely on the database trigger to reject unauthorized signups
+                }
+            });
+            if (error) throw error;
+        } catch (err: any) {
+            setError(err.message || 'Google login failed');
+            setIsLoading(false);
+        }
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -168,8 +195,16 @@ export const Login: React.FC = () => {
                     </div>
 
                     <div className="grid grid-cols-1">
-                        <button className="flex items-center justify-center gap-2 px-4 py-2.5 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors font-medium text-gray-700 text-sm w-full">
-                            <GoogleIcon /> Google
+                        <button
+                            onClick={handleGoogleLogin}
+                            disabled={isLoading}
+                            className="flex items-center justify-center gap-2 px-4 py-2.5 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors font-medium text-gray-700 text-sm w-full disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {isLoading ? (
+                                <div className="w-5 h-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+                            ) : (
+                                <><GoogleIcon /> Google</>
+                            )}
                         </button>
                     </div>
 
