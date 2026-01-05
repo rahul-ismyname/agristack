@@ -1,32 +1,38 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     FileText,
     TrendingUp,
     Users,
     Truck,
-    Loader2,
     CheckCircle2,
 } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { getDashboardStats, getRecentActivity } from '../lib/api';
 
-const StatCard = ({ icon: Icon, color, label, value, trend, trendUp }: any) => (
-    <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
-        <div className="flex justify-between items-start mb-4">
-            <div className={`p-2 rounded-lg ${color}`}>
-                <Icon className="w-5 h-5 text-gray-700" />
-            </div>
-            {trend && (
-                <div className={`flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full ${trendUp ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-                    <TrendingUp className="w-3 h-3" />
-                    {trend}
+const StatCard = ({ icon: Icon, color, label, value, trend, trendUp, to, state }: any) => {
+    const navigate = useNavigate();
+    return (
+        <div
+            onClick={() => to && navigate(to, { state })}
+            className={`bg-white p-5 rounded-xl border border-gray-100 shadow-sm transition-all hover:scale-[1.02] hover:shadow-md cursor-pointer ${!to && 'cursor-default'}`}
+        >
+            <div className="flex justify-between items-start mb-4">
+                <div className={`p-2 rounded-lg ${color}`}>
+                    <Icon className="w-5 h-5 text-gray-700" />
                 </div>
-            )}
+                {trend && (
+                    <div className={`flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full ${trendUp ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                        <TrendingUp className="w-3 h-3" />
+                        {trend}
+                    </div>
+                )}
+            </div>
+            <div className="text-gray-500 text-sm font-medium mb-1">{label}</div>
+            <div className="text-3xl font-bold text-gray-900">{value}</div>
         </div>
-        <div className="text-gray-500 text-sm font-medium mb-1">{label}</div>
-        <div className="text-3xl font-bold text-gray-900">{value}</div>
-    </div>
-);
+    );
+};
 
 const StatusBadge = ({ status }: { status: string }) => {
     const styles: Record<string, string> = {
@@ -44,7 +50,23 @@ const StatusBadge = ({ status }: { status: string }) => {
     );
 };
 
+const DashboardSkeleton = () => (
+    <div className="animate-pulse">
+        <div className="mb-8">
+            <div className="h-8 w-64 bg-gray-200 rounded-lg mb-2" />
+            <div className="h-4 w-96 bg-gray-100 rounded-lg" />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {[1, 2, 3, 4].map(i => (
+                <div key={i} className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm h-32" />
+            ))}
+        </div>
+        <div className="bg-white border border-gray-200 rounded-xl shadow-sm h-64" />
+    </div>
+);
+
 export const Dashboard: React.FC = () => {
+    const navigate = useNavigate();
     const [stats, setStats] = useState<any>({
         farmerCount: 0,
         inspectionCount: 0,
@@ -74,99 +96,105 @@ export const Dashboard: React.FC = () => {
         loadDashboardData();
     }, []);
 
-    if (isLoading) {
-        return (
-            <Layout title="Dashboard">
-                <div className="flex items-center justify-center h-full">
-                    <Loader2 className="w-8 h-8 text-primary-vivid animate-spin" />
-                </div>
-            </Layout>
-        );
-    }
-
     return (
         <Layout title="Dashboard Overview">
-            <div className="mb-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome back, Officer</h2>
-                <p className="text-gray-500">Here's what's happening in your district today.</p>
-            </div>
+            {isLoading ? (
+                <DashboardSkeleton />
+            ) : (
+                <>
+                    <div className="mb-8">
+                        <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome back, Officer</h2>
+                        <p className="text-gray-500">Here's what's happening in your district today.</p>
+                    </div>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <StatCard
-                    icon={Users}
-                    color="bg-blue-100"
-                    label="Total Farmers"
-                    value={stats.farmerCount}
-                    trend="+12%"
-                    trendUp={true}
-                />
-                <StatCard
-                    icon={FileText}
-                    color="bg-orange-100"
-                    label="Total Inspections"
-                    value={stats.inspectionCount}
-                    trend="Active"
-                    trendUp={true}
-                />
-                <StatCard
-                    icon={CheckCircle2}
-                    color="bg-green-100"
-                    label="Inspections Passed"
-                    value={stats.passedCount}
-                    trendUp={true}
-                />
-                <StatCard
-                    icon={Truck}
-                    color="bg-purple-100"
-                    label="Active Vehicles"
-                    value={stats.vehicleCount}
-                    trendUp={true}
-                />
-            </div>
+                    {/* Stats Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <StatCard
+                            icon={Users}
+                            color="bg-blue-100"
+                            label="Total Farmers"
+                            value={stats.farmerCount}
+                            trend="+12%"
+                            trendUp={true}
+                            to="/farmers"
+                        />
+                        <StatCard
+                            icon={FileText}
+                            color="bg-orange-100"
+                            label="Total Inspections"
+                            value={stats.inspectionCount}
+                            trend="Active"
+                            trendUp={true}
+                            to="/inspections"
+                        />
+                        <StatCard
+                            icon={CheckCircle2}
+                            color="bg-green-100"
+                            label="Inspections Passed"
+                            value={stats.passedCount}
+                            trendUp={true}
+                            to="/inspections"
+                        />
+                        <StatCard
+                            icon={Truck}
+                            color="bg-purple-100"
+                            label="Active Vehicles"
+                            value={stats.vehicleCount}
+                            trendUp={true}
+                            to="/inspections"
+                            state={{ tab: 'gyan' }}
+                        />
+                    </div>
 
-            {/* Recent Activity Table */}
-            <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-                    <h3 className="font-bold text-gray-900">Recent Activity</h3>
-                    <button className="text-sm text-primary-vivid font-medium hover:underline">View All</button>
-                </div>
-                <table className="w-full text-left border-collapse">
-                    <thead>
-                        <tr className="bg-gray-50/50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            <th className="px-6 py-4">ID</th>
-                            <th className="px-6 py-4">Activity</th>
-                            <th className="px-6 py-4">Type</th>
-                            <th className="px-6 py-4">Date</th>
-                            <th className="px-6 py-4">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                        {recentActivity.map((row, idx) => (
-                            <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
-                                <td className="px-6 py-4 text-sm font-medium text-gray-900">{row.id}</td>
-                                <td className="px-6 py-4">
-                                    <div className="text-sm font-medium text-gray-900">{row.title}</div>
-                                </td>
-                                <td className={`px-6 py-4 text-sm font-medium ${row.color}`}>{row.type}</td>
-                                <td className="px-6 py-4 text-sm text-gray-500">
-                                    {new Date(row.date).toLocaleDateString()}
-                                </td>
-                                <td className="px-6 py-4">
-                                    <StatusBadge status={row.status} />
-                                </td>
-                            </tr>
-                        ))}
-                        {recentActivity.length === 0 && (
-                            <tr>
-                                <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
-                                    No recent activity found.
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
-            </div>
+                    {/* Recent Activity Table */}
+                    <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                        <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                            <h3 className="font-bold text-gray-900">Recent Activity</h3>
+                            <button
+                                onClick={() => navigate('/inspections')}
+                                className="text-sm text-primary-vivid font-medium hover:underline"
+                            >
+                                View All
+                            </button>
+                        </div>
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="bg-gray-50/50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                    <th className="px-6 py-4">ID</th>
+                                    <th className="px-6 py-4">Activity</th>
+                                    <th className="px-6 py-4">Type</th>
+                                    <th className="px-6 py-4">Date</th>
+                                    <th className="px-6 py-4">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {recentActivity.map((row, idx) => (
+                                    <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
+                                        <td className="px-6 py-4 text-sm font-medium text-gray-900">{row.id}</td>
+                                        <td className="px-6 py-4">
+                                            <div className="text-sm font-medium text-gray-900">{row.title}</div>
+                                        </td>
+                                        <td className={`px-6 py-4 text-sm font-medium ${row.color}`}>{row.type}</td>
+                                        <td className="px-6 py-4 text-sm text-gray-500">
+                                            {new Date(row.date).toLocaleDateString()}
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <StatusBadge status={row.status} />
+                                        </td>
+                                    </tr>
+                                ))}
+                                {recentActivity.length === 0 && (
+                                    <tr>
+                                        <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                                            No recent activity found.
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </>
+            )}
         </Layout>
     );
 };

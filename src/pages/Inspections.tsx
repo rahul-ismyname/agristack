@@ -178,9 +178,10 @@ const SeedInspectionTab = () => {
                                             </div>
                                             <div>
                                                 <div className="text-sm font-bold text-gray-900">{row.farmer_name || 'Unknown'}</div>
-                                                <div className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                                                <div className="text-[10px] text-gray-400 font-mono mb-1">{row.farmer_id}</div>
+                                                <div className="text-xs text-gray-500 flex items-center gap-1">
                                                     <MapPin className="w-3 h-3 text-gray-400" />
-                                                    {row.village ? `${row.village}, ${row.district}` : 'Location N/A'}
+                                                    {row.village ? `${row.village}, ${row.block}, ${row.district}` : 'Location N/A'}
                                                 </div>
                                             </div>
                                         </div>
@@ -227,7 +228,7 @@ const SeedInspectionTab = () => {
                                             <div className="absolute right-0 top-full pt-2 w-36 hidden group-hover/actions:block z-50">
                                                 <div className="bg-white rounded-lg shadow-xl border border-gray-100 py-1 overflow-hidden">
                                                     {!row.is_passed && (
-                                                        <button 
+                                                        <button
                                                             onClick={() => handleStatusUpdate(row.id, true)}
                                                             className="w-full text-left px-4 py-2.5 text-sm text-green-600 hover:bg-green-50 flex items-center gap-2 transition-colors"
                                                         >
@@ -235,7 +236,7 @@ const SeedInspectionTab = () => {
                                                         </button>
                                                     )}
                                                     {row.is_passed && (
-                                                        <button 
+                                                        <button
                                                             onClick={() => handleStatusUpdate(row.id, false)}
                                                             className="w-full text-left px-4 py-2.5 text-sm text-amber-600 hover:bg-amber-50 flex items-center gap-2 transition-colors"
                                                         >
@@ -317,6 +318,17 @@ const GyanVahanTab = () => {
         }
     };
 
+    const handleDelete = async (id: string) => {
+        if (!confirm('Are you sure you want to delete this Gyan Vahan entry?')) return;
+        try {
+            await deleteRecord('gyan_vahan', id);
+            setVehicles(prev => prev.filter(v => v.id !== id));
+        } catch (error) {
+            console.error('Failed to delete:', error);
+            alert('Failed to delete entry');
+        }
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex justify-end">
@@ -337,7 +349,14 @@ const GyanVahanTab = () => {
                 ) : (
                     <>
                         {vehicles.map((vehicle) => (
-                            <div key={vehicle.id} className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                            <div key={vehicle.id} className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative group">
+                                <button
+                                    onClick={() => handleDelete(vehicle.id)}
+                                    className="absolute top-4 right-4 p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                                    title="Delete Entry"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
                                 <div className="flex justify-between items-start mb-4">
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
@@ -348,8 +367,7 @@ const GyanVahanTab = () => {
                                             <div className="text-xs text-gray-500">{vehicle.inspector_role || 'Inspector'}</div>
                                         </div>
                                     </div>
-                                    {/* Status Badge Mockup since DB doesn't have status yet, using random or default */}
-                                    <span className="px-2 py-1 rounded text-xs font-semibold bg-green-50 text-green-700">
+                                    <span className="px-2 py-1 rounded text-xs font-semibold bg-green-50 text-green-700 mr-8">
                                         Active
                                     </span>
                                 </div>
@@ -387,8 +405,11 @@ const GyanVahanTab = () => {
     );
 };
 
+import { useLocation } from 'react-router-dom';
+
 export const Inspections: React.FC = () => {
-    const [activeTab, setActiveTab] = useState<'seed' | 'gyan'>('seed');
+    const location = useLocation();
+    const [activeTab, setActiveTab] = useState<'seed' | 'gyan'>((location.state as any)?.tab || 'seed');
 
     return (
         <Layout title="Inspections & Field Operations">

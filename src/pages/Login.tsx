@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Input } from '../components/ui/Input';
 import loginBg from '../assets/login-bg.png';
 import { supabase } from '../lib/supabase';
@@ -18,16 +18,27 @@ const GoogleIcon = () => (
 
 export const Login: React.FC = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (location.state && (location.state as any).message) {
+            setSuccessMessage((location.state as any).message);
+            // Clear location state to avoid message reappearing on refresh
+            window.history.replaceState({}, document.title);
+        }
+    }, [location]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
         setError(null);
+        setSuccessMessage(null);
 
         // Supabase Auth Login
         const { error } = await supabase.auth.signInWithPassword({
@@ -93,8 +104,14 @@ export const Login: React.FC = () => {
                     </div>
 
                     {error && (
-                        <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">
+                        <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm border border-red-100 animate-in fade-in duration-300">
                             {error}
+                        </div>
+                    )}
+
+                    {successMessage && (
+                        <div className="bg-green-50 text-green-600 p-3 rounded-md text-sm border border-green-100 animate-in fade-in duration-300">
+                            {successMessage}
                         </div>
                     )}
 

@@ -18,10 +18,10 @@ export const InspectionModal: React.FC<InspectionModalProps> = ({ isOpen, onClos
         inspector_name: '',
         officer_mobile: '',
         farmer_name: '',
+        farmer_id: '',
         district: '',
         block: '',
         village: '',
-        specific_location: '',
         sowing_status: '',
         inspection_date: new Date().toISOString().split('T')[0],
         is_passed: true,
@@ -94,10 +94,10 @@ export const InspectionModal: React.FC<InspectionModalProps> = ({ isOpen, onClos
             inspector_name: '',
             officer_mobile: '',
             farmer_name: '',
+            farmer_id: '',
             district: '',
             block: '',
             village: '',
-            specific_location: '',
             sowing_status: '',
             inspection_date: new Date().toISOString().split('T')[0],
             is_passed: true,
@@ -153,11 +153,12 @@ export const InspectionModal: React.FC<InspectionModalProps> = ({ isOpen, onClos
                                                 <div className="sm:col-span-2">
                                                     <Input label="Farmer Name" name="farmer_name" value={formData.farmer_name} onChange={handleChange} placeholder="Name" required />
                                                 </div>
-                                                <Input label="District" name="district" value={formData.district} onChange={handleChange} required />
-                                                <Input label="Village" name="village" value={formData.village} onChange={handleChange} required />
-                                                <div className="sm:col-span-4">
-                                                    <Input label="Specific Location / Landmark" name="specific_location" value={formData.specific_location} onChange={handleChange} placeholder="e.g. Near Panchayat Bhawan or GPS Coordinates" required />
+                                                <div className="sm:col-span-2">
+                                                    <Input label="Farmer ID" name="farmer_id" value={formData.farmer_id} onChange={handleChange} placeholder="FID/REG-XXXXX" required />
                                                 </div>
+                                                <Input label="District" name="district" value={formData.district} onChange={handleChange} required />
+                                                <Input label="Block" name="block" value={formData.block} onChange={handleChange} required />
+                                                <Input label="Village" name="village" value={formData.village} onChange={handleChange} required />
                                             </div>
                                         </div>
 
@@ -248,8 +249,8 @@ export const InspectionModal: React.FC<InspectionModalProps> = ({ isOpen, onClos
                                                             <label
                                                                 htmlFor="photo-upload"
                                                                 className={`w-full py-2.5 rounded-lg border-2 border-dashed flex items-center justify-center gap-2 cursor-pointer transition-colors h-[38px] ${uploadSuccess
-                                                                        ? 'border-green-300 bg-green-50 text-green-700'
-                                                                        : 'border-gray-300 text-gray-500 hover:bg-gray-50'
+                                                                    ? 'border-green-300 bg-green-50 text-green-700'
+                                                                    : 'border-gray-300 text-gray-500 hover:bg-gray-50'
                                                                     }`}
                                                             >
                                                                 {isUploading ? (

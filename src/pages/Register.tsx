@@ -19,16 +19,19 @@ export const Register: React.FC = () => {
     });
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [success, setSuccess] = useState<string | null>(null);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
         setError(null);
+        setSuccess(null);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
         setError(null);
+        setSuccess(null);
 
         // 1. Sign up with Supabase Auth
         const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -54,8 +57,8 @@ export const Register: React.FC = () => {
 
         // Check if session exists (Required for RLS)
         if (!authData.session) {
-            console.warn('No session returned from SignUp. Likely email confirmation is ON.');
-            setError('Account created, but not logged in. Please DISABLE "Confirm Email" in Supabase and DELETE this user to try again.');
+            console.log('No session returned from SignUp. Email confirmation is likely enabled.');
+            setSuccess('Registration successful! Please check your email for the confirmation link.');
             setIsLoading(false);
             return;
         }
@@ -63,7 +66,7 @@ export const Register: React.FC = () => {
         // 2. Insert into profiles table
         const { error: profileError } = await supabase
             .from('profiles')
-            .insert([
+            .upsert([
                 {
                     id: authData.user.id,
                     name: formData.name,
@@ -77,10 +80,11 @@ export const Register: React.FC = () => {
 
         if (profileError) {
             console.error('Profile creation failed:', profileError);
-            setError('Profile Error: ' + profileError.message);
+            setError('Account created but profile setup failed: ' + profileError.message);
         } else {
             console.log('Registration success');
-            navigate('/login');
+            setSuccess('Registration successful! Redirecting to login...');
+            setTimeout(() => navigate('/login', { state: { message: 'Registration successful! Please sign in.' } }), 1500);
         }
 
         setIsLoading(false);
@@ -122,8 +126,14 @@ export const Register: React.FC = () => {
                     </div>
 
                     {error && (
-                        <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">
+                        <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm border border-red-100 animate-in fade-in duration-300">
                             {error}
+                        </div>
+                    )}
+
+                    {success && (
+                        <div className="bg-green-50 text-green-600 p-3 rounded-md text-sm border border-green-100 animate-in fade-in duration-300">
+                            {success}
                         </div>
                     )}
 

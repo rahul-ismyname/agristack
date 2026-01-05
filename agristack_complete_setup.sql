@@ -1,13 +1,3 @@
--- ====================================================================
--- AGRISTACK ADMIN - COMPLETE MASTER SETUP SCRIPT
--- ====================================================================
--- Description: Sets up all tables, storage, and security policies.
--- Usage: Run this in the Supabase SQL Editor. It is idempotent (safe to run multiple times).
-
--- ==========================================
--- 1. DATABASE TABLES
--- ==========================================
-
 -- 1.1 Profiles Table (Extends Supabase Auth)
 CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
@@ -54,6 +44,7 @@ CREATE TABLE IF NOT EXISTS public.seed_inspections (
   officer_mobile TEXT,
   inspection_date DATE,
   farmer_name TEXT,
+  farmer_id TEXT,
   district TEXT,
   block TEXT,
   village TEXT,

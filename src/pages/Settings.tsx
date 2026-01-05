@@ -2,9 +2,15 @@ import React, { useState } from 'react';
 import { Layout } from '../components/Layout';
 import { User, Lock, Globe, Moon, Save } from 'lucide-react';
 import { Input } from '../components/ui/Input';
+import { useAuth } from '../context/AuthContext';
 
 export const Settings: React.FC = () => {
+    const { profile, user } = useAuth();
     const [activeTab, setActiveTab] = useState<'profile' | 'preferences' | 'security'>('profile');
+
+    const getInitials = (name: string) => {
+        return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    };
 
     return (
         <Layout title="Settings">
@@ -38,21 +44,25 @@ export const Settings: React.FC = () => {
                     {activeTab === 'profile' && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <div className="flex items-center gap-6">
-                                <div className="w-20 h-20 rounded-full bg-orange-100 flex items-center justify-center text-orange-700 text-2xl font-bold border-4 border-white shadow-lg">
-                                    RS
+                                <div className="w-20 h-20 rounded-full bg-orange-100 flex items-center justify-center text-orange-700 text-2xl font-bold border-4 border-white shadow-lg overflow-hidden">
+                                    {profile?.avatar_url ? (
+                                        <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                                    ) : (
+                                        getInitials(profile?.name || 'Praveen Kumar')
+                                    )}
                                 </div>
                                 <div>
-                                    <h3 className="text-lg font-bold text-gray-900">Rajesh Singh</h3>
+                                    <h3 className="text-lg font-bold text-gray-900">{profile?.name || 'Praveen Kumar'}</h3>
                                     <p className="text-sm text-gray-500">District Officer • Bihar Agriculture Dept</p>
                                     <button className="text-xs font-medium text-primary-vivid hover:underline mt-1">Change Avatar</button>
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                <Input label="Full Name" value="Rajesh Singh" disabled />
-                                <Input label="Email Address" value="rajesh.singh@gov.in" disabled />
-                                <Input label="Phone Number" value="+91 98765 43210" disabled />
-                                <Input label="Designation" value="Block Agriculture Officer" disabled />
+                                <Input label="Full Name" value={profile?.name || 'Praveen Kumar'} disabled />
+                                <Input label="Email Address" value={user?.email || ''} disabled />
+                                <Input label="Phone Number" value={profile?.mobile || 'Not provided'} disabled />
+                                <Input label="Designation" value="District Officer" disabled />
                             </div>
                         </div>
                     )}

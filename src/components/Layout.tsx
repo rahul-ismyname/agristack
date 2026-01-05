@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
     LayoutDashboard,
     Users,
@@ -42,9 +42,21 @@ interface LayoutProps {
 
 export const Layout: React.FC<LayoutProps> = ({ children, title = "Dashboard" }) => {
     const location = useLocation();
+    const navigate = useNavigate();
     const isActive = (path: string) => location.pathname === path;
     const [isHelpOpen, setIsHelpOpen] = React.useState(false);
     const { signOut, profile } = useAuth();
+
+    const handleLogout = async () => {
+        try {
+            await signOut();
+            navigate('/login', { replace: true });
+        } catch (error) {
+            console.error('Logout failed:', error);
+            // Even if it fails, try to clear locally
+            navigate('/login', { replace: true });
+        }
+    };
 
     return (
         <div className="flex h-screen bg-[#FAFAFA] font-outfit">
@@ -150,7 +162,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, title = "Dashboard" })
                     </Link>
 
                     <button
-                        onClick={() => signOut()}
+                        onClick={handleLogout}
                         className="w-full mt-2 flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                     >
                         <LogOut className="w-4 h-4" />
