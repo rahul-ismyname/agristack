@@ -249,31 +249,58 @@ export const getRecentActivity = async () => {
 
 // --- Export API ---
 
-export const getAllFarmers = async () => {
-    const { data, error } = await supabase
+export const getAllFarmers = async (fromDate?: string, toDate?: string) => {
+    let query = supabase
         .from('farmers')
         .select('*')
         .order('created_at', { ascending: false });
 
+    if (fromDate) {
+        query = query.gte('created_at', fromDate);
+    }
+    if (toDate) {
+        query = query.lte('created_at', toDate);
+    }
+
+    const { data, error } = await query;
+
     if (error) throw error;
     return data;
 };
 
-export const getAllInspections = async () => {
-    const { data, error } = await supabase
+export const getAllInspections = async (fromDate?: string, toDate?: string) => {
+    let query = supabase
         .from('seed_inspections')
         .select('*')
         .order('created_at', { ascending: false });
 
+    if (fromDate) {
+        query = query.gte('created_at', fromDate);
+    }
+    if (toDate) {
+        query = query.lte('created_at', toDate);
+    }
+
+    const { data, error } = await query;
+
     if (error) throw error;
     return data;
 };
 
-export const getAllGyanVahan = async () => {
-    const { data, error } = await supabase
+export const getAllGyanVahan = async (fromDate?: string, toDate?: string) => {
+    let query = supabase
         .from('gyan_vahan')
         .select('*')
         .order('created_at', { ascending: false });
+
+    if (fromDate) {
+        query = query.gte('created_at', fromDate);
+    }
+    if (toDate) {
+        query = query.lte('created_at', toDate);
+    }
+
+    const { data, error } = await query;
 
     if (error) throw error;
     return data;

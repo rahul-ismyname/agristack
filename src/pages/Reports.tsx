@@ -1,21 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { Layout } from '../components/Layout';
 import {
-    getDashboardStats,
-    getAllFarmers,
-    getAllInspections,
-    getAllGyanVahan
+    getDashboardStats
 } from '../lib/api';
-import { exportToCSV } from '../lib/utils';
 import {
     TrendingUp,
     Users,
     FileCheck,
     Truck,
     Download,
-    Loader2,
-    ChevronDown
+    Loader2
 } from 'lucide-react';
+import { ExportModal } from '../components/ExportModal';
 
 const Card = ({ children, className = "" }: { children: React.ReactNode, className?: string }) => (
     <div className={`bg-white p-6 rounded-xl border border-gray-200 shadow-sm ${className}`}>
@@ -51,8 +47,7 @@ export const Reports: React.FC = () => {
         femaleFarmers: 0
     });
     const [isLoading, setIsLoading] = useState(true);
-    const [isExporting, setIsExporting] = useState(false);
-    const [showExportMenu, setShowExportMenu] = useState(false);
+    const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
     useEffect(() => {
         loadData();
@@ -66,37 +61,6 @@ export const Reports: React.FC = () => {
             console.error(error);
         } finally {
             setIsLoading(false);
-        }
-    };
-
-    const handleExport = async (type: 'farmers' | 'inspections' | 'gyan_vahan') => {
-        try {
-            setIsExporting(true);
-            setShowExportMenu(false);
-            let data: any[] = [];
-            let filename = '';
-
-            switch (type) {
-                case 'farmers':
-                    data = await getAllFarmers();
-                    filename = `farmers_export_${new Date().toISOString().split('T')[0]}`;
-                    break;
-                case 'inspections':
-                    data = await getAllInspections();
-                    filename = `inspections_export_${new Date().toISOString().split('T')[0]}`;
-                    break;
-                case 'gyan_vahan':
-                    data = await getAllGyanVahan();
-                    filename = `gyan_vahan_export_${new Date().toISOString().split('T')[0]}`;
-                    break;
-            }
-
-            exportToCSV(data, filename);
-        } catch (error) {
-            console.error('Export failed:', error);
-            alert('Failed to export data. Please try again.');
-        } finally {
-            setIsExporting(false);
         }
     };
 
@@ -120,57 +84,12 @@ export const Reports: React.FC = () => {
 
                 <div className="relative">
                     <button
-                        onClick={() => setShowExportMenu(!showExportMenu)}
-                        disabled={isExporting}
-                        className="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 shadow-sm transition-colors disabled:opacity-70"
+                        onClick={() => setIsExportModalOpen(true)}
+                        className="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 shadow-sm transition-colors"
                     >
-                        {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                        <Download className="w-4 h-4" />
                         Export Data
-                        <ChevronDown className={`w-4 h-4 transition-transform ${showExportMenu ? 'rotate-180' : ''}`} />
                     </button>
-
-                    {showExportMenu && (
-                        <div className="absolute right-0 top-full mt-2 w-56 bg-white border border-gray-100 rounded-xl shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                            <div className="py-1">
-                                <button
-                                    onClick={() => handleExport('farmers')}
-                                    className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors border-b border-gray-50"
-                                >
-                                    <div className="p-1.5 bg-green-50 text-green-600 rounded-md">
-                                        <Users className="w-4 h-4" />
-                                    </div>
-                                    <div>
-                                        <div className="font-medium">Farmers List</div>
-                                        <div className="text-xs text-gray-400">Full registry export</div>
-                                    </div>
-                                </button>
-                                <button
-                                    onClick={() => handleExport('inspections')}
-                                    className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors border-b border-gray-50"
-                                >
-                                    <div className="p-1.5 bg-blue-50 text-blue-600 rounded-md">
-                                        <FileCheck className="w-4 h-4" />
-                                    </div>
-                                    <div>
-                                        <div className="font-medium">Inspection Reports</div>
-                                        <div className="text-xs text-gray-400">Seed verification data</div>
-                                    </div>
-                                </button>
-                                <button
-                                    onClick={() => handleExport('gyan_vahan')}
-                                    className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors"
-                                >
-                                    <div className="p-1.5 bg-purple-50 text-purple-600 rounded-md">
-                                        <Truck className="w-4 h-4" />
-                                    </div>
-                                    <div>
-                                        <div className="font-medium">Gyan Vahan Logs</div>
-                                        <div className="text-xs text-gray-400">Campaign activity</div>
-                                    </div>
-                                </button>
-                            </div>
-                        </div>
-                    )}
                 </div>
             </div>
 
@@ -289,6 +208,10 @@ export const Reports: React.FC = () => {
                 </div>
             </div>
 
+            <ExportModal
+                isOpen={isExportModalOpen}
+                onClose={() => setIsExportModalOpen(false)}
+            />
         </Layout>
     );
 };
