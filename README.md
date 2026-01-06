@@ -1,73 +1,100 @@
-# React + TypeScript + Vite
+# Agristack Admin Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern, mobile-responsive admin application for managing agricultural data, farmer registrations, seed inspections, and mobile outreach programs (Gyan Vahan).
 
-Currently, two official plugins are available:
+![Agristack Mobile](/public/logo.png) <!-- Replace with actual screenshot path if available -->
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Features
 
-## React Compiler
+- **Dynamic Dashboard**: Real-time statistics on farmer registrations, inspections, and mobile outreach.
+- **Farmer Registry**: Comprehensive management of farmer data with Aadhaar, bank, and land details.
+- **Seed Inspections**: Digital inspection forms with photo evidence upload and status tracking (Pass/Fail).
+- **Gyan Vahan (Mobile Outreach)**: Track village visits, awareness programs, and inspector activity.
+- **Global Search**: Powerful cross-entity search bar in the header to find records instantly by name, ID, or location.
+- **Record Management**: Full Create, Read, Update (Edit), and Delete (CRUD) support for all primary modules.
+- **Data Export**: Export reports to PDF and Excel formats with date-range filters.
+- **Mobile First**: Fully responsive design optimized for smartphones, tablets, and desktops.
+- **Secure Auth**: Role-based access control (Admin/Staff) powered by Supabase Auth.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🛠️ Tech Stack
 
-## Expanding the ESLint configuration
+- **Frontend**: React 18, TypeScript, Vite
+- **Styling**: Tailwind CSS, Framer Motion (Animations)
+- **Icons**: Lucide React
+- **Backend/DB**: Supabase (PostgreSQL + Auth + Storage)
+- **Tables**: TanStack Table (for complex data views)
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 📦 Getting Started
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### Prerequisites
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- Node.js (v18 or higher)
+- npm or yarn
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Installation
+
+1. **Clone the repository**:
+   ```bash
+   git clone <your-github-repo-url>
+   cd agristack-admin
+   ```
+
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+
+3. **Environment Configuration**:
+   Create a `.env` file in the root directory and add your Supabase credentials:
+   ```env
+   VITE_SUPABASE_URL=your_supabase_project_url
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
+
+### Running Locally
+
+```bash
+npm run dev
+```
+The app will be available at `http://localhost:5173`.
+
+### Building for Production
+
+```bash
+npm run build
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## 📤 Pushing to GitHub
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+To save your changes and push them to your GitHub repository, follow these steps:
+
+1. **Check changed files**:
+   ```bash
+   git status
+   ```
+
+2. **Stage your changes**:
+   ```bash
+   git add .
+   ```
+
+3. **Commit your changes**:
+   ```bash
+   git commit -m "feat: your descriptive message"
+   ```
+
+4. **Push to the main branch**:
+   ```bash
+   git push origin main
+   ```
+
+> [!TIP]
+> Always run `npm run build` before pushing to ensure there are no TypeScript or build errors in your code.
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License.
