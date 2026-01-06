@@ -183,7 +183,7 @@ export const exportToPDF = (
             fillColor: [250, 252, 250] // Very subtle green tint
         },
         margin: { top: 75, left: 14, right: 14 },
-        didDrawPage: (data) => {
+        didDrawPage: (_data) => {
             // Footer
             const pageCount = doc.getNumberOfPages();
             doc.setFontSize(8);
