@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Upload, Loader2, Check } from 'lucide-react';
 import { Input } from './ui/Input';
@@ -8,30 +8,71 @@ interface InspectionModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSave: (data: any) => void;
+    inspection?: any; // For edit mode
 }
 
-export const InspectionModal: React.FC<InspectionModalProps> = ({ isOpen, onClose, onSave }) => {
-    const [formData, setFormData] = useState({
-        lot_no: '',
-        crop: '',
-        variety: '',
-        inspector_name: '',
-        officer_mobile: '',
-        farmer_name: '',
-        farmer_id: '',
-        district: '',
-        block: '',
-        village: '',
-        sowing_status: '',
-        inspection_date: new Date().toISOString().split('T')[0],
-        is_passed: true,
-        remarks: '',
-        photo_url: ''
-    });
+const initialFormState = {
+    lot_no: '',
+    crop: '',
+    variety: '',
+    inspector_name: '',
+    officer_mobile: '',
+    farmer_name: '',
+    farmer_id: '',
+    district: '',
+    block: '',
+    village: '',
+    sowing_status: '',
+    inspection_date: new Date().toISOString().split('T')[0],
+    is_passed: true,
+    remarks: '',
+    photo_url: ''
+};
 
+export const InspectionModal: React.FC<InspectionModalProps> = ({ isOpen, onClose, onSave, inspection }) => {
+    const [formData, setFormData] = useState(initialFormState);
     const [customCrop, setCustomCrop] = useState('');
     const [isUploading, setIsUploading] = useState(false);
     const [uploadSuccess, setUploadSuccess] = useState(false);
+    const isEditMode = !!inspection;
+
+    // Pre-fill form when editing
+    useEffect(() => {
+        if (isOpen && inspection) {
+            const standardCrops = ['Wheat', 'Rice', 'Maize', 'Mustard'];
+            const isCustomCrop = !standardCrops.includes(inspection.crop);
+
+            setFormData({
+                lot_no: inspection.lot_no || '',
+                crop: isCustomCrop ? 'Other' : (inspection.crop || ''),
+                variety: inspection.variety || '',
+                inspector_name: inspection.inspector_name || '',
+                officer_mobile: inspection.officer_mobile || '',
+                farmer_name: inspection.farmer_name || '',
+                farmer_id: inspection.farmer_id || '',
+                district: inspection.district || '',
+                block: inspection.block || '',
+                village: inspection.village || '',
+                sowing_status: inspection.sowing_status || '',
+                inspection_date: inspection.inspection_date || new Date().toISOString().split('T')[0],
+                is_passed: inspection.is_passed ?? true,
+                remarks: inspection.remarks || '',
+                photo_url: inspection.photo_url || ''
+            });
+
+            if (isCustomCrop) {
+                setCustomCrop(inspection.crop || '');
+            }
+
+            if (inspection.photo_url) {
+                setUploadSuccess(true);
+            }
+        } else if (isOpen && !inspection) {
+            setFormData(initialFormState);
+            setCustomCrop('');
+            setUploadSuccess(false);
+        }
+    }, [isOpen, inspection]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -70,7 +111,6 @@ export const InspectionModal: React.FC<InspectionModalProps> = ({ isOpen, onClos
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Use custom crop name if 'Other' is selected
         const finalCropName = formData.crop === 'Other' ? customCrop : formData.crop;
 
         if (!finalCropName) {
@@ -87,23 +127,7 @@ export const InspectionModal: React.FC<InspectionModalProps> = ({ isOpen, onClos
         onClose();
 
         // Reset form
-        setFormData({
-            lot_no: '',
-            crop: '',
-            variety: '',
-            inspector_name: '',
-            officer_mobile: '',
-            farmer_name: '',
-            farmer_id: '',
-            district: '',
-            block: '',
-            village: '',
-            sowing_status: '',
-            inspection_date: new Date().toISOString().split('T')[0],
-            is_passed: true,
-            remarks: '',
-            photo_url: ''
-        });
+        setFormData(initialFormState);
         setCustomCrop('');
         setUploadSuccess(false);
     };
@@ -131,8 +155,12 @@ export const InspectionModal: React.FC<InspectionModalProps> = ({ isOpen, onClos
                         <div className="bg-white pointer-events-auto w-full h-full sm:h-auto sm:rounded-xl shadow-2xl sm:max-w-5xl flex flex-col overflow-hidden">
                             <div className="flex justify-between items-center p-4 sm:p-6 border-b border-gray-100 flex-shrink-0">
                                 <div>
-                                    <h2 className="text-xl font-bold text-gray-900">New Seed Inspection</h2>
-                                    <p className="text-xs text-gray-500 hidden sm:block">Enter inspection details below. All fields are required unless optional.</p>
+                                    <h2 className="text-xl font-bold text-gray-900">
+                                        {isEditMode ? 'Edit Inspection' : 'New Seed Inspection'}
+                                    </h2>
+                                    <p className="text-xs text-gray-500 hidden sm:block">
+                                        {isEditMode ? 'Update inspection details below.' : 'Enter inspection details below. All fields are required unless optional.'}
+                                    </p>
                                 </div>
                                 <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full text-gray-500 transition-colors">
                                     <X className="w-5 h-5" />
@@ -162,7 +190,7 @@ export const InspectionModal: React.FC<InspectionModalProps> = ({ isOpen, onClos
                                             </div>
                                         </div>
 
-                                        {/* Section: Crop Details - Compact */}
+                                        {/* Section: Crop Details */}
                                         <div className="sm:col-span-2 bg-white p-3 rounded-lg border border-gray-200/60 shadow-sm">
                                             <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-2">
                                                 <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Crop Details
@@ -213,7 +241,7 @@ export const InspectionModal: React.FC<InspectionModalProps> = ({ isOpen, onClos
                                             </div>
                                         </div>
 
-                                        {/* Section: Inspection Details - Compact */}
+                                        {/* Section: Inspection Details */}
                                         <div className="sm:col-span-2 bg-white p-3 rounded-lg border border-gray-200/60 shadow-sm">
                                             <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-2">
                                                 <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span> Report
@@ -267,7 +295,7 @@ export const InspectionModal: React.FC<InspectionModalProps> = ({ isOpen, onClos
                                             </div>
                                         </div>
 
-                                        {/* Remarks - Full Width */}
+                                        {/* Remarks */}
                                         <div className="sm:col-span-4">
                                             <textarea
                                                 name="remarks"
@@ -294,7 +322,7 @@ export const InspectionModal: React.FC<InspectionModalProps> = ({ isOpen, onClos
                                         disabled={isUploading}
                                         className="flex-1 sm:flex-none px-6 py-2.5 rounded-lg text-sm font-bold text-black bg-primary-vivid hover:bg-primary-hover shadow-lg shadow-primary-vivid/20 transition-all transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                        Save Inspection
+                                        {isEditMode ? 'Save Changes' : 'Save Inspection'}
                                     </button>
                                 </div>
                             </form>

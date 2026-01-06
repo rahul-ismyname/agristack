@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Layout } from '../components/Layout';
-import { Plus, Search, MoreVertical, Phone, MapPin, Loader2, Trash2 } from 'lucide-react';
+import { Plus, Search, MoreVertical, Phone, MapPin, Loader2, Trash2, Pencil } from 'lucide-react';
 import { FarmerRegistrationModal } from '../components/FarmerRegistrationModal';
-import { getFarmers, createFarmer, deleteRecord } from '../lib/api';
+import { getFarmers, createFarmer, updateFarmer, deleteRecord } from '../lib/api';
 
 export const Farmers: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingFarmer, setEditingFarmer] = useState<any>(null);
     const [farmers, setFarmers] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -15,7 +16,7 @@ export const Farmers: React.FC = () => {
 
     useEffect(() => {
         loadFarmers();
-    }, [page]); // Reload when page changes
+    }, [page]);
 
     const loadFarmers = async () => {
         try {
@@ -30,16 +31,35 @@ export const Farmers: React.FC = () => {
         }
     };
 
-    const handleSave = async (newData: any) => {
+    const handleSave = async (formData: any) => {
         try {
-            const savedFarmer = await createFarmer(newData);
-            if (savedFarmer) {
-                setFarmers(prev => [savedFarmer, ...prev]);
+            if (editingFarmer) {
+                // Update existing farmer
+                const updated = await updateFarmer(editingFarmer.id, formData);
+                if (updated) {
+                    setFarmers(prev => prev.map(f => f.id === editingFarmer.id ? updated : f));
+                }
+            } else {
+                // Create new farmer
+                const savedFarmer = await createFarmer(formData);
+                if (savedFarmer) {
+                    setFarmers(prev => [savedFarmer, ...prev]);
+                }
             }
         } catch (error) {
-            console.error('Error creating farmer:', error);
+            console.error('Error saving farmer:', error);
             alert('Failed to save farmer. Please try again.');
         }
+    };
+
+    const handleEdit = (farmer: any) => {
+        setEditingFarmer(farmer);
+        setIsModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setEditingFarmer(null);
     };
 
     const handleDelete = async (id: string) => {
@@ -64,11 +84,12 @@ export const Farmers: React.FC = () => {
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                         <input
                             onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Search farmers..."
                             className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-vivid/20 focus:border-primary-vivid shadow-sm"
                         />
                     </div>
                     <button
-                        onClick={() => setIsModalOpen(true)}
+                        onClick={() => { setEditingFarmer(null); setIsModalOpen(true); }}
                         className="flex items-center gap-2 bg-primary-vivid hover:bg-primary-hover text-black px-4 md:px-5 py-2.5 rounded-lg text-sm font-bold shadow-lg shadow-primary-vivid/20 transition-all active:scale-95 w-full sm:w-auto justify-center"
                     >
                         <Plus className="w-4 h-4" />
@@ -99,6 +120,7 @@ export const Farmers: React.FC = () => {
                                         <tr key={farmer.id} className="hover:bg-gray-50/50 transition-colors">
                                             <td className="px-6 py-4">
                                                 <div className="font-medium text-gray-900">{farmer.full_name}</div>
+                                                <div className="text-xs text-gray-500">{farmer.registration_id}</div>
                                             </td>
                                             <td className="px-6 py-4 text-gray-600">
                                                 <div className="flex items-center gap-2">
@@ -121,6 +143,12 @@ export const Farmers: React.FC = () => {
                                                     {/* Action Dropdown */}
                                                     <div className="absolute right-0 top-full pt-2 w-36 hidden group-hover/actions:block z-50">
                                                         <div className="bg-white rounded-lg shadow-xl border border-gray-100 py-1 overflow-hidden">
+                                                            <button
+                                                                onClick={() => handleEdit(farmer)}
+                                                                className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                                                            >
+                                                                <Pencil className="w-4 h-4" /> Edit
+                                                            </button>
                                                             <button
                                                                 onClick={() => handleDelete(farmer.id)}
                                                                 className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
@@ -169,8 +197,9 @@ export const Farmers: React.FC = () => {
 
                 <FarmerRegistrationModal
                     isOpen={isModalOpen}
-                    onClose={() => setIsModalOpen(false)}
+                    onClose={handleCloseModal}
                     onSave={handleSave}
+                    farmer={editingFarmer}
                 />
             </div>
         </Layout>

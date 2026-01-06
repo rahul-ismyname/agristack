@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, User, MapPin, Building, Sprout } from 'lucide-react';
 import { Input } from './ui/Input';
@@ -7,26 +7,57 @@ interface FarmerRegistrationModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSave: (data: any) => void;
+    farmer?: any; // For edit mode
 }
 
-export const FarmerRegistrationModal: React.FC<FarmerRegistrationModalProps> = ({ isOpen, onClose, onSave }) => {
-    const [formData, setFormData] = useState({
-        full_name: '',
-        gender: 'Male',
-        dob: '',
-        mobile: '',
-        aadhaar: '',
-        district: '',
-        block: '',
-        panchayat: '',
-        village: '',
-        ifsc: '',
-        account_no: '',
-        khata: '',
-        khesra: '',
-        area: '',
-        registration_id: ''
-    });
+const initialFormState = {
+    full_name: '',
+    gender: 'Male',
+    dob: '',
+    mobile: '',
+    aadhaar: '',
+    district: '',
+    block: '',
+    panchayat: '',
+    village: '',
+    ifsc: '',
+    account_no: '',
+    khata: '',
+    khesra: '',
+    area: '',
+    registration_id: ''
+};
+
+export const FarmerRegistrationModal: React.FC<FarmerRegistrationModalProps> = ({ isOpen, onClose, onSave, farmer }) => {
+    const [formData, setFormData] = useState(initialFormState);
+    const isEditMode = !!farmer;
+
+    // Pre-fill form when editing
+    useEffect(() => {
+        if (isOpen && farmer) {
+            setFormData({
+                full_name: farmer.full_name || '',
+                gender: farmer.gender || 'Male',
+                dob: farmer.dob || '',
+                mobile: farmer.mobile || '',
+                aadhaar: farmer.aadhaar || '',
+                district: farmer.district || '',
+                block: farmer.block || '',
+                panchayat: farmer.panchayat || '',
+                village: farmer.village || '',
+                ifsc: farmer.ifsc || '',
+                account_no: farmer.account_no || '',
+                khata: farmer.khata || '',
+                khesra: farmer.khesra || '',
+                area: farmer.area || '',
+                registration_id: farmer.registration_id || ''
+            });
+        } else if (isOpen && !farmer) {
+            // Generate new ID for new farmer
+            const uniqueId = `FRM-${Math.floor(100000 + Math.random() * 900000)}`;
+            setFormData({ ...initialFormState, registration_id: uniqueId });
+        }
+    }, [isOpen, farmer]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -37,32 +68,8 @@ export const FarmerRegistrationModal: React.FC<FarmerRegistrationModalProps> = (
         e.preventDefault();
         onSave(formData);
         onClose();
-        setFormData({
-            full_name: '',
-            gender: 'Male',
-            dob: '',
-            mobile: '',
-            aadhaar: '',
-            district: '',
-            block: '',
-            panchayat: '',
-            village: '',
-            ifsc: '',
-            account_no: '',
-            khata: '',
-            khesra: '',
-            area: '',
-            registration_id: ''
-        });
+        setFormData(initialFormState);
     };
-
-    // Generate ID when modal opens if not present
-    React.useEffect(() => {
-        if (isOpen) {
-            const uniqueId = `FRM-${Math.floor(100000 + Math.random() * 900000)}`;
-            setFormData(prev => ({ ...prev, registration_id: uniqueId }));
-        }
-    }, [isOpen]);
 
     return (
         <AnimatePresence>
@@ -85,8 +92,12 @@ export const FarmerRegistrationModal: React.FC<FarmerRegistrationModalProps> = (
                         <div className="bg-white pointer-events-auto w-full h-full sm:h-auto sm:rounded-xl shadow-2xl sm:max-w-4xl flex flex-col overflow-hidden">
                             <div className="flex justify-between items-center p-4 sm:p-6 border-b border-gray-100 flex-shrink-0">
                                 <div>
-                                    <h2 className="text-xl font-bold text-gray-900">New Farmer Registration</h2>
-                                    <p className="text-xs text-gray-500 hidden sm:block">Add complete farmer details to the registry.</p>
+                                    <h2 className="text-xl font-bold text-gray-900">
+                                        {isEditMode ? 'Edit Farmer' : 'New Farmer Registration'}
+                                    </h2>
+                                    <p className="text-xs text-gray-500 hidden sm:block">
+                                        {isEditMode ? 'Update farmer details below.' : 'Add complete farmer details to the registry.'}
+                                    </p>
                                 </div>
                                 <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full text-gray-500 transition-colors">
                                     <X className="w-5 h-5" />
@@ -105,7 +116,14 @@ export const FarmerRegistrationModal: React.FC<FarmerRegistrationModalProps> = (
                                             </h3>
                                             <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                                                 <div className="sm:col-span-2">
-                                                    <Input label="Registration ID" name="registration_id" value={formData.registration_id} onChange={() => { }} disabled className="bg-gray-100/50" />
+                                                    <Input
+                                                        label="Registration ID"
+                                                        name="registration_id"
+                                                        value={formData.registration_id}
+                                                        onChange={() => { }}
+                                                        disabled
+                                                        className="bg-gray-100/50"
+                                                    />
                                                 </div>
                                                 <div className="sm:col-span-2">
                                                     <Input label="Full Name" name="full_name" value={formData.full_name} onChange={handleChange} required />
@@ -179,7 +197,7 @@ export const FarmerRegistrationModal: React.FC<FarmerRegistrationModalProps> = (
                                         type="submit"
                                         className="flex-1 sm:flex-none px-6 py-2.5 rounded-lg text-sm font-bold text-black bg-primary-vivid hover:bg-primary-hover shadow-lg shadow-primary-vivid/20 transition-all transform active:scale-95"
                                     >
-                                        Register Farmer
+                                        {isEditMode ? 'Save Changes' : 'Register Farmer'}
                                     </button>
                                 </div>
                             </form>

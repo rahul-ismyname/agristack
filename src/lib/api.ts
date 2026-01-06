@@ -97,6 +97,109 @@ export const createGyanVahanEntry = async (entryData: any) => {
     return data[0];
 };
 
+// --- Update API ---
+
+export const updateFarmer = async (id: string, farmerData: any) => {
+    const sanitizedData = { ...farmerData };
+    if (sanitizedData.dob === '') {
+        sanitizedData.dob = null;
+    }
+    // Remove id from update payload
+    delete sanitizedData.id;
+    delete sanitizedData.created_at;
+
+    const { data, error } = await supabase
+        .from('farmers')
+        .update(sanitizedData)
+        .eq('id', id)
+        .select();
+
+    if (error) throw error;
+    return data[0];
+};
+
+export const updateInspection = async (id: string, inspectionData: any) => {
+    const sanitizedData = { ...inspectionData };
+    delete sanitizedData.id;
+    delete sanitizedData.created_at;
+
+    const { data, error } = await supabase
+        .from('seed_inspections')
+        .update(sanitizedData)
+        .eq('id', id)
+        .select();
+
+    if (error) throw error;
+    return data[0];
+};
+
+// --- Global Search API ---
+
+export interface SearchResult {
+    id: string;
+    title: string;
+    subtitle: string;
+    type: 'farmer' | 'inspection' | 'gyan_vahan';
+}
+
+export const globalSearch = async (query: string): Promise<SearchResult[]> => {
+    if (!query || query.trim().length < 2) return [];
+
+    const searchTerm = `%${query.trim()}%`;
+    const results: SearchResult[] = [];
+
+    // Search Farmers
+    const { data: farmers } = await supabase
+        .from('farmers')
+        .select('id, full_name, mobile, village, registration_id')
+        .or(`full_name.ilike.${searchTerm},mobile.ilike.${searchTerm},registration_id.ilike.${searchTerm}`)
+        .limit(5);
+
+    farmers?.forEach(f => {
+        results.push({
+            id: f.id,
+            title: f.full_name || 'Unknown',
+            subtitle: `${f.registration_id || 'No ID'} • ${f.village || 'Unknown Village'}`,
+            type: 'farmer'
+        });
+    });
+
+    // Search Inspections
+    const { data: inspections } = await supabase
+        .from('seed_inspections')
+        .select('id, lot_no, farmer_name, crop, variety')
+        .or(`lot_no.ilike.${searchTerm},farmer_name.ilike.${searchTerm},crop.ilike.${searchTerm}`)
+        .limit(5);
+
+    inspections?.forEach(i => {
+        results.push({
+            id: i.id,
+            title: `${i.lot_no} - ${i.farmer_name}`,
+            subtitle: `${i.crop} • ${i.variety}`,
+            type: 'inspection'
+        });
+    });
+
+    // Search Gyan Vahan
+    const { data: gyanVahan } = await supabase
+        .from('gyan_vahan')
+        .select('id, inspector_name, village, district')
+        .or(`inspector_name.ilike.${searchTerm},village.ilike.${searchTerm},district.ilike.${searchTerm}`)
+        .limit(5);
+
+    gyanVahan?.forEach(g => {
+        results.push({
+            id: g.id,
+            title: g.inspector_name || 'Unknown Inspector',
+            subtitle: `${g.village || 'Unknown'}, ${g.district || 'Unknown'}`,
+            type: 'gyan_vahan'
+        });
+    });
+
+    return results.slice(0, 10); // Return max 10 results
+};
+
+
 export const uploadImage = async (file: File) => {
     const fileExt = file.name.split('.').pop();
     const fileName = `${Math.random()}.${fileExt}`;

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
     LayoutDashboard,
@@ -13,9 +13,15 @@ import {
     LogOut,
     ShieldCheck,
     Menu,
+    Loader2,
+    User,
+    FileText,
+    Truck,
     type LucideIcon
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { globalSearch } from '../lib/api';
+import type { SearchResult } from '../lib/api';
 
 interface SidebarItemProps {
     icon: LucideIcon;
@@ -50,7 +56,67 @@ export const Layout: React.FC<LayoutProps> = ({ children, title = "Dashboard" })
     const isActive = (path: string) => location.pathname === path;
     const [isHelpOpen, setIsHelpOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [isSearchFocused, setIsSearchFocused] = useState(false);
+    const searchRef = useRef<HTMLDivElement>(null);
     const { signOut, profile, isAdmin } = useAuth();
+
+    // Debounced search
+    useEffect(() => {
+        const timer = setTimeout(async () => {
+            if (searchQuery.trim().length >= 2) {
+                setIsSearching(true);
+                try {
+                    const results = await globalSearch(searchQuery);
+                    setSearchResults(results);
+                } catch (error) {
+                    console.error('Search error:', error);
+                    setSearchResults([]);
+                } finally {
+                    setIsSearching(false);
+                }
+            } else {
+                setSearchResults([]);
+            }
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
+
+    // Close search results on outside click
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+                setIsSearchFocused(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const handleSearchResultClick = (result: SearchResult) => {
+        setSearchQuery('');
+        setSearchResults([]);
+        setIsSearchFocused(false);
+
+        if (result.type === 'farmer') {
+            navigate('/farmers', { state: { highlightId: result.id } });
+        } else if (result.type === 'inspection') {
+            navigate('/inspections', { state: { highlightId: result.id } });
+        } else {
+            navigate('/inspections', { state: { tab: 'gyan', highlightId: result.id } });
+        }
+    };
+
+    const getSearchIcon = (type: SearchResult['type']) => {
+        switch (type) {
+            case 'farmer': return User;
+            case 'inspection': return FileText;
+            case 'gyan_vahan': return Truck;
+        }
+    };
 
     const handleLogout = async () => {
         try {
@@ -255,13 +321,60 @@ export const Layout: React.FC<LayoutProps> = ({ children, title = "Dashboard" })
 
                     <div className="flex items-center gap-2 md:gap-4">
                         {/* Desktop Search */}
-                        <div className="relative hidden md:block">
+                        <div className="relative hidden md:block" ref={searchRef}>
                             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                            {isSearching && (
+                                <Loader2 className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 animate-spin" />
+                            )}
                             <input
                                 type="text"
-                                placeholder="Search..."
-                                className="pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-vivid/20 w-64 transition-all hover:border-gray-300"
+                                placeholder="Search farmers, inspections..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onFocus={() => setIsSearchFocused(true)}
+                                className="pl-9 pr-10 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-vivid/20 w-72 transition-all hover:border-gray-300"
                             />
+
+                            {/* Search Results Dropdown */}
+                            {isSearchFocused && (searchResults.length > 0 || searchQuery.length >= 2) && (
+                                <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden z-50">
+                                    {searchResults.length > 0 ? (
+                                        <div className="max-h-80 overflow-y-auto">
+                                            {searchResults.map((result) => {
+                                                const Icon = getSearchIcon(result.type);
+                                                return (
+                                                    <button
+                                                        key={`${result.type}-${result.id}`}
+                                                        onClick={() => handleSearchResultClick(result)}
+                                                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 text-left transition-colors border-b border-gray-100 last:border-0"
+                                                    >
+                                                        <div className={`p-2 rounded-lg ${result.type === 'farmer' ? 'bg-blue-50 text-blue-600' :
+                                                            result.type === 'inspection' ? 'bg-green-50 text-green-600' :
+                                                                'bg-purple-50 text-purple-600'
+                                                            }`}>
+                                                            <Icon className="w-4 h-4" />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="text-sm font-medium text-gray-900 truncate">{result.title}</div>
+                                                            <div className="text-xs text-gray-500 truncate">{result.subtitle}</div>
+                                                        </div>
+                                                        <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${result.type === 'farmer' ? 'bg-blue-100 text-blue-700' :
+                                                            result.type === 'inspection' ? 'bg-green-100 text-green-700' :
+                                                                'bg-purple-100 text-purple-700'
+                                                            }`}>
+                                                            {result.type.replace('_', ' ')}
+                                                        </span>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    ) : (
+                                        <div className="px-4 py-6 text-center text-gray-500 text-sm">
+                                            {isSearching ? 'Searching...' : 'No results found'}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                         {/* Mobile Search Icon */}
                         <button className="p-2 text-gray-500 hover:bg-gray-50 rounded-full md:hidden">

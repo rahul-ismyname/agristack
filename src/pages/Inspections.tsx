@@ -11,6 +11,7 @@ import {
     XCircle,
     Loader2,
     Trash2,
+    Pencil,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -32,10 +33,11 @@ const TabButton = ({ active, onClick, icon: Icon, label }: any) => (
 );
 
 import { InspectionModal } from '../components/InspectionModal';
-import { getSeedInspections, createSeedInspection, updateSeedInspectionStatus, getGyanVahanEntries, createGyanVahanEntry, deleteRecord } from '../lib/api';
+import { getSeedInspections, createSeedInspection, updateSeedInspectionStatus, updateInspection, getGyanVahanEntries, createGyanVahanEntry, deleteRecord } from '../lib/api';
 
 const SeedInspectionTab = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingInspection, setEditingInspection] = useState<any>(null);
     const [inspections, setInspections] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -57,14 +59,33 @@ const SeedInspectionTab = () => {
         }
     };
 
-    const handleSave = async (newData: any) => {
+    const handleSave = async (formData: any) => {
         try {
-            const saved = await createSeedInspection(newData);
-            if (saved) setInspections(prev => [saved, ...prev]);
+            if (editingInspection) {
+                // Update existing
+                const updated = await updateInspection(editingInspection.id, formData);
+                if (updated) {
+                    setInspections(prev => prev.map(i => i.id === editingInspection.id ? updated : i));
+                }
+            } else {
+                // Create new
+                const saved = await createSeedInspection(formData);
+                if (saved) setInspections(prev => [saved, ...prev]);
+            }
         } catch (error) {
             console.error(error);
             alert('Failed to save inspection');
         }
+    };
+
+    const handleEdit = (inspection: any) => {
+        setEditingInspection(inspection);
+        setIsModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setEditingInspection(null);
     };
 
     const handleStatusUpdate = async (id: string, is_passed: boolean) => {
@@ -138,7 +159,7 @@ const SeedInspectionTab = () => {
                 </div>
 
                 <button
-                    onClick={() => setIsModalOpen(true)}
+                    onClick={() => { setEditingInspection(null); setIsModalOpen(true); }}
                     className="flex items-center gap-2 bg-primary-vivid hover:bg-primary-hover text-black px-4 py-2 rounded-lg text-sm font-bold transition-transform transform active:scale-95 shadow-lg shadow-primary-vivid/20"
                 >
                     <Plus className="w-4 h-4" />
@@ -228,6 +249,12 @@ const SeedInspectionTab = () => {
                                                 {/* Dropdown Menu - Changed to Click instead of Hover for better Mobile/Tablet support if needed, but keeping hover with improved z-index */}
                                                 <div className="absolute right-0 top-full pt-2 w-36 hidden group-hover/actions:block z-50">
                                                     <div className="bg-white rounded-lg shadow-xl border border-gray-100 py-1 overflow-hidden">
+                                                        <button
+                                                            onClick={() => handleEdit(row)}
+                                                            className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                                                        >
+                                                            <Pencil className="w-4 h-4" /> Edit
+                                                        </button>
                                                         {!row.is_passed && (
                                                             <button
                                                                 onClick={() => handleStatusUpdate(row.id, true)}
@@ -280,8 +307,9 @@ const SeedInspectionTab = () => {
 
             <InspectionModal
                 isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
+                onClose={handleCloseModal}
                 onSave={handleSave}
+                inspection={editingInspection}
             />
         </div>
     );
