@@ -190,7 +190,7 @@ export const Dashboard: React.FC = () => {
 
                     {/* Recent Activity Table */}
                     <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                        <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                        <div className="px-4 md:px-6 py-4 border-b border-gray-200 flex justify-between items-center">
                             <h3 className="font-bold text-gray-900">Recent Activity</h3>
                             <button
                                 onClick={() => navigate('/inspections')}
@@ -199,41 +199,43 @@ export const Dashboard: React.FC = () => {
                                 View All
                             </button>
                         </div>
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="bg-gray-50/50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                    <th className="px-6 py-4">ID</th>
-                                    <th className="px-6 py-4">Activity</th>
-                                    <th className="px-6 py-4">Type</th>
-                                    <th className="px-6 py-4">Date</th>
-                                    <th className="px-6 py-4">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100">
-                                {recentActivity.map((row, idx) => (
-                                    <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
-                                        <td className="px-6 py-4 text-sm font-medium text-gray-900">{row.id}</td>
-                                        <td className="px-6 py-4">
-                                            <div className="text-sm font-medium text-gray-900">{row.title}</div>
-                                        </td>
-                                        <td className={`px-6 py-4 text-sm font-medium ${row.color}`}>{row.type}</td>
-                                        <td className="px-6 py-4 text-sm text-gray-500">
-                                            {new Date(row.date).toLocaleDateString()}
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <StatusBadge status={row.status} />
-                                        </td>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse min-w-[600px]">
+                                <thead>
+                                    <tr className="bg-gray-50/50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                        <th className="px-6 py-4">ID</th>
+                                        <th className="px-6 py-4">Activity</th>
+                                        <th className="px-6 py-4">Type</th>
+                                        <th className="px-6 py-4">Date</th>
+                                        <th className="px-6 py-4">Status</th>
                                     </tr>
-                                ))}
-                                {recentActivity.length === 0 && (
-                                    <tr>
-                                        <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
-                                            No recent activity found.
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {recentActivity.map((row, idx) => (
+                                        <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
+                                            <td className="px-6 py-4 text-sm font-medium text-gray-900">{row.id}</td>
+                                            <td className="px-6 py-4">
+                                                <div className="text-sm font-medium text-gray-900">{row.title}</div>
+                                            </td>
+                                            <td className={`px-6 py-4 text-sm font-medium ${row.color}`}>{row.type}</td>
+                                            <td className="px-6 py-4 text-sm text-gray-500">
+                                                {new Date(row.date).toLocaleDateString()}
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <StatusBadge status={row.status} />
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {recentActivity.length === 0 && (
+                                        <tr>
+                                            <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                                                No recent activity found.
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </>
             )}

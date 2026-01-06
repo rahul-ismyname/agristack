@@ -69,10 +69,11 @@ export const Farmers: React.FC = () => {
                     </div>
                     <button
                         onClick={() => setIsModalOpen(true)}
-                        className="flex items-center gap-2 bg-primary-vivid hover:bg-primary-hover text-black px-5 py-2.5 rounded-lg text-sm font-bold shadow-lg shadow-primary-vivid/20 transition-all active:scale-95"
+                        className="flex items-center gap-2 bg-primary-vivid hover:bg-primary-hover text-black px-4 md:px-5 py-2.5 rounded-lg text-sm font-bold shadow-lg shadow-primary-vivid/20 transition-all active:scale-95 w-full sm:w-auto justify-center"
                     >
                         <Plus className="w-4 h-4" />
-                        Add New Farmer
+                        <span className="hidden sm:inline">Add New Farmer</span>
+                        <span className="sm:hidden">Add Farmer</span>
                     </button>
                 </div>
 
@@ -84,7 +85,7 @@ export const Farmers: React.FC = () => {
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
-                            <table className="w-full text-left text-sm">
+                            <table className="w-full text-left text-sm min-w-[500px]">
                                 <thead className="bg-gray-50 border-b border-gray-100">
                                     <tr>
                                         <th className="px-6 py-4 font-semibold text-gray-900">Farmer Name</th>
@@ -143,7 +144,7 @@ export const Farmers: React.FC = () => {
                     )}
 
                     {/* Pagination Controls */}
-                    <div className="border-t border-gray-200 px-6 py-4 flex items-center justify-between bg-gray-50/50">
+                    <div className="border-t border-gray-200 px-4 md:px-6 py-3 md:py-4 flex flex-col sm:flex-row items-center justify-between gap-3 bg-gray-50/50">
                         <span className="text-sm text-gray-500">
                             Page <span className="font-semibold text-gray-900">{page}</span> of <span className="font-semibold text-gray-900">{totalPages}</span>
                         </span>
@@ -151,14 +152,14 @@ export const Farmers: React.FC = () => {
                             <button
                                 onClick={() => setPage(p => Math.max(1, p - 1))}
                                 disabled={page === 1 || isLoading}
-                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                className="px-3 md:px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                             >
                                 Previous
                             </button>
                             <button
                                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                                 disabled={page === totalPages || isLoading}
-                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                className="px-3 md:px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                             >
                                 Next
                             </button>

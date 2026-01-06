@@ -76,16 +76,16 @@ export const Reports: React.FC = () => {
 
     return (
         <Layout title="Analytics & Reports">
-            <div className="mb-8 flex justify-between items-end">
+            <div className="mb-6 md:mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Performance Reports</h2>
-                    <p className="text-gray-500">Real-time insights from your district database.</p>
+                    <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-1 md:mb-2">Performance Reports</h2>
+                    <p className="text-gray-500 text-sm md:text-base">Real-time insights from your district database.</p>
                 </div>
 
-                <div className="relative">
+                <div className="relative w-full sm:w-auto">
                     <button
                         onClick={() => setIsExportModalOpen(true)}
-                        className="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 shadow-sm transition-colors"
+                        className="flex items-center justify-center gap-2 bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 shadow-sm transition-colors w-full sm:w-auto"
                     >
                         <Download className="w-4 h-4" />
                         Export Data

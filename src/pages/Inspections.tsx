@@ -153,126 +153,128 @@ const SeedInspectionTab = () => {
                         <p className="text-sm text-gray-400 font-medium">Loading records...</p>
                     </div>
                 ) : (
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-gray-50/50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider">
-                                <th className="px-6 py-4">Lot No</th>
-                                <th className="px-6 py-4">Farmer</th>
-                                <th className="px-6 py-4">Crop / Variety</th>
-                                <th className="px-6 py-4">Inspector</th>
-                                <th className="px-6 py-4">Date</th>
-                                <th className="px-6 py-4">Result</th>
-                                <th className="px-6 py-4 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {filteredInspections.map((row: any) => (
-                                <tr key={row.id} className="group hover:bg-blue-50/30 transition-colors">
-                                    <td className="px-6 py-4">
-                                        <span className="text-sm font-bold text-gray-900 font-mono bg-gray-100 px-2 py-1 rounded">{row.lot_no}</span>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-100 to-blue-50 flex items-center justify-center text-blue-600 font-bold text-xs ring-4 ring-white shadow-sm">
-                                                {row.farmer_name?.[0]?.toUpperCase() || 'U'}
-                                            </div>
-                                            <div>
-                                                <div className="text-sm font-bold text-gray-900">{row.farmer_name || 'Unknown'}</div>
-                                                <div className="text-[10px] text-gray-400 font-mono mb-1">{row.farmer_id}</div>
-                                                <div className="text-xs text-gray-500 flex items-center gap-1">
-                                                    <MapPin className="w-3 h-3 text-gray-400" />
-                                                    {row.village ? `${row.village}, ${row.block}, ${row.district}` : 'Location N/A'}
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse min-w-[800px]">
+                            <thead>
+                                <tr className="bg-gray-50/50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                    <th className="px-6 py-4">Lot No</th>
+                                    <th className="px-6 py-4">Farmer</th>
+                                    <th className="px-6 py-4">Crop / Variety</th>
+                                    <th className="px-6 py-4">Inspector</th>
+                                    <th className="px-6 py-4">Date</th>
+                                    <th className="px-6 py-4">Result</th>
+                                    <th className="px-6 py-4 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {filteredInspections.map((row: any) => (
+                                    <tr key={row.id} className="group hover:bg-blue-50/30 transition-colors">
+                                        <td className="px-6 py-4">
+                                            <span className="text-sm font-bold text-gray-900 font-mono bg-gray-100 px-2 py-1 rounded">{row.lot_no}</span>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-100 to-blue-50 flex items-center justify-center text-blue-600 font-bold text-xs ring-4 ring-white shadow-sm">
+                                                    {row.farmer_name?.[0]?.toUpperCase() || 'U'}
+                                                </div>
+                                                <div>
+                                                    <div className="text-sm font-bold text-gray-900">{row.farmer_name || 'Unknown'}</div>
+                                                    <div className="text-[10px] text-gray-400 font-mono mb-1">{row.farmer_id}</div>
+                                                    <div className="text-xs text-gray-500 flex items-center gap-1">
+                                                        <MapPin className="w-3 h-3 text-gray-400" />
+                                                        {row.village ? `${row.village}, ${row.block}, ${row.district}` : 'Location N/A'}
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="text-sm font-semibold text-gray-900">{row.crop}</div>
-                                        <div className="text-xs text-gray-500 bg-gray-100 inline-block px-1.5 py-0.5 rounded mt-1 border border-gray-200">{row.variety}</div>
-                                    </td>
-                                    <td className="px-6 py-4 text-sm text-gray-600">
-                                        <div className="flex items-center gap-2">
-                                            <div>
-                                                <div className="font-medium text-gray-900">{row.inspector_name}</div>
-                                                <div className="text-[10px] text-gray-400 font-mono">{row.officer_mobile}</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 text-sm text-gray-500">
-                                        <div className="flex items-center gap-2 font-medium">
-                                            {new Date(row.inspection_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        {row.is_passed ? (
-                                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-green-50 text-green-700 border border-green-200">
-                                                <CheckCircle2 className="w-3.5 h-3.5" /> Passed
-                                            </span>
-                                        ) : (
-                                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-red-50 text-red-700 border border-red-200">
-                                                <XCircle className="w-3.5 h-3.5" /> Failed
-                                            </span>
-                                        )}
-                                    </td>
-                                    <td className="px-6 py-4 text-right">
-                                        <div className="relative group/actions">
-                                            <button className="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 transition-colors">
-                                                <div className="flex gap-1">
-                                                    <div className="w-1 h-1 bg-current rounded-full" />
-                                                    <div className="w-1 h-1 bg-current rounded-full" />
-                                                    <div className="w-1 h-1 bg-current rounded-full" />
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="text-sm font-semibold text-gray-900">{row.crop}</div>
+                                            <div className="text-xs text-gray-500 bg-gray-100 inline-block px-1.5 py-0.5 rounded mt-1 border border-gray-200">{row.variety}</div>
+                                        </td>
+                                        <td className="px-6 py-4 text-sm text-gray-600">
+                                            <div className="flex items-center gap-2">
+                                                <div>
+                                                    <div className="font-medium text-gray-900">{row.inspector_name}</div>
+                                                    <div className="text-[10px] text-gray-400 font-mono">{row.officer_mobile}</div>
                                                 </div>
-                                            </button>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 text-sm text-gray-500">
+                                            <div className="flex items-center gap-2 font-medium">
+                                                {new Date(row.inspection_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            {row.is_passed ? (
+                                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-green-50 text-green-700 border border-green-200">
+                                                    <CheckCircle2 className="w-3.5 h-3.5" /> Passed
+                                                </span>
+                                            ) : (
+                                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-red-50 text-red-700 border border-red-200">
+                                                    <XCircle className="w-3.5 h-3.5" /> Failed
+                                                </span>
+                                            )}
+                                        </td>
+                                        <td className="px-6 py-4 text-right">
+                                            <div className="relative group/actions">
+                                                <button className="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 transition-colors">
+                                                    <div className="flex gap-1">
+                                                        <div className="w-1 h-1 bg-current rounded-full" />
+                                                        <div className="w-1 h-1 bg-current rounded-full" />
+                                                        <div className="w-1 h-1 bg-current rounded-full" />
+                                                    </div>
+                                                </button>
 
-                                            {/* Dropdown Menu - Changed to Click instead of Hover for better Mobile/Tablet support if needed, but keeping hover with improved z-index */}
-                                            <div className="absolute right-0 top-full pt-2 w-36 hidden group-hover/actions:block z-50">
-                                                <div className="bg-white rounded-lg shadow-xl border border-gray-100 py-1 overflow-hidden">
-                                                    {!row.is_passed && (
+                                                {/* Dropdown Menu - Changed to Click instead of Hover for better Mobile/Tablet support if needed, but keeping hover with improved z-index */}
+                                                <div className="absolute right-0 top-full pt-2 w-36 hidden group-hover/actions:block z-50">
+                                                    <div className="bg-white rounded-lg shadow-xl border border-gray-100 py-1 overflow-hidden">
+                                                        {!row.is_passed && (
+                                                            <button
+                                                                onClick={() => handleStatusUpdate(row.id, true)}
+                                                                className="w-full text-left px-4 py-2.5 text-sm text-green-600 hover:bg-green-50 flex items-center gap-2 transition-colors"
+                                                            >
+                                                                <CheckCircle2 className="w-4 h-4" /> Approve
+                                                            </button>
+                                                        )}
+                                                        {row.is_passed && (
+                                                            <button
+                                                                onClick={() => handleStatusUpdate(row.id, false)}
+                                                                className="w-full text-left px-4 py-2.5 text-sm text-amber-600 hover:bg-amber-50 flex items-center gap-2 transition-colors"
+                                                            >
+                                                                <XCircle className="w-4 h-4" /> Reject
+                                                            </button>
+                                                        )}
+                                                        <div className="h-px bg-gray-100 my-1" />
                                                         <button
-                                                            onClick={() => handleStatusUpdate(row.id, true)}
-                                                            className="w-full text-left px-4 py-2.5 text-sm text-green-600 hover:bg-green-50 flex items-center gap-2 transition-colors"
+                                                            onClick={() => handleDelete(row.id)}
+                                                            className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
                                                         >
-                                                            <CheckCircle2 className="w-4 h-4" /> Approve
+                                                            <Trash2 className="w-4 h-4" /> Delete
                                                         </button>
-                                                    )}
-                                                    {row.is_passed && (
-                                                        <button
-                                                            onClick={() => handleStatusUpdate(row.id, false)}
-                                                            className="w-full text-left px-4 py-2.5 text-sm text-amber-600 hover:bg-amber-50 flex items-center gap-2 transition-colors"
-                                                        >
-                                                            <XCircle className="w-4 h-4" /> Reject
-                                                        </button>
-                                                    )}
-                                                    <div className="h-px bg-gray-100 my-1" />
-                                                    <button
-                                                        onClick={() => handleDelete(row.id)}
-                                                        className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
-                                                    >
-                                                        <Trash2 className="w-4 h-4" /> Delete
-                                                    </button>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                            {filteredInspections.length === 0 && (
-                                <tr>
-                                    <td colSpan={7} className="px-6 py-12 text-center">
-                                        <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
-                                            <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mb-4">
-                                                <Search className="w-6 h-6 text-gray-400" />
+                                        </td>
+                                    </tr>
+                                ))}
+                                {filteredInspections.length === 0 && (
+                                    <tr>
+                                        <td colSpan={7} className="px-6 py-12 text-center">
+                                            <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
+                                                <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                                                    <Search className="w-6 h-6 text-gray-400" />
+                                                </div>
+                                                <h3 className="text-gray-900 font-bold text-lg mb-1">No inspections found</h3>
+                                                <p className="text-gray-500 text-sm">
+                                                    We couldn't find any results matching your search terms or filters. Try adjusting them.
+                                                </p>
                                             </div>
-                                            <h3 className="text-gray-900 font-bold text-lg mb-1">No inspections found</h3>
-                                            <p className="text-gray-500 text-sm">
-                                                We couldn't find any results matching your search terms or filters. Try adjusting them.
-                                            </p>
-                                        </div>
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 )}
             </div>
 
